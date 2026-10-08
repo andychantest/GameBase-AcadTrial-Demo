@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Stage 1 — Core Loop</title>
+<!--
+  ============================================================
+  STAGE 1 / 核心玩法  (Core Loop)
+  ============================================================
+  這是整個遊戲的「骨架」。此版本刻意只保留三件事：
+
+    1. 輸入  — 游標（或手指）控制藍色圓球
+    2. 規則  — 紅色圓球從邊界生成，一直朝玩家直線追擊
+    3. 回饋  — 頂部橫條 = 30 秒倒計時；被追到就退回中心
+
+  刻意「不做」的事（這才是本階段的教學重點）：
+    - 沒有文字（無標題、無說明、無分數、無字幕）
+    - 沒有圖片（全部用幾何圖形畫出來）
+    - 沒有音效
+    - 沒有劇情、沒有角色、沒有技能、沒有教學內容
+
+  學習者從這一版只能學到一件事：「怎麼活下來」。
+  他們不需要知道紅球代表什麼 —— 這正是設計目的。
+
+  技術上刻意保持零外部依賴、零 fetch、零設定檔，
+  所以雙擊本檔即可遊玩，不需要啟動任何伺服器。
+  ============================================================
+-->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  body { cursor: none; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button id="btn-skip" style="position:absolute;top:8px;right:8px;z-index:10;display:none;padding:4px 8px;font-size:14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⏭</button>
+<button id="btn-restart" style="position:absolute;top:8px;right:52px;z-index:10;display:none;padding:4px 8px;font-size:14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⟳</button>
+<script>
+'use strict';
+
+const DEMO_SKIP = location.search.includes('skip=1') || (() => { try { return localStorage.getItem('academic_demo_skip') === '1'; } catch (e) { return false; } })();
+const skipBtn = document.getElementById('btn-skip');
+if (DEMO_SKIP && skipBtn) skipBtn.style.display = 'block';
+skipBtn?.addEventListener('click', () => {
+  elapsed = DURATION; won = true; running = false; flash = 1;
+});
+
+const restartBtn = document.getElementById('btn-restart');
+if (DEMO_SKIP && restartBtn) restartBtn.style.display = 'block';
+restartBtn?.addEventListener('click', () => { reset(); });
+
+// ---------------------------------------------------------------- 常數
+// 這些數值刻意寫死在程式碼裡。設定檔系統要到後面的階段才引入。
+const DURATION   = 30;    // 存活目標：30 秒
+const PLAYER_SPD = 3.0;   // 玩家速度（與正式版 config.js 的 move_speed 相同）
+const PLAYER_R   = 14;
+const ENEMY_SPD  = 1.7;   // 敵人速度：比玩家慢一點，緊迫但永遠逃得掉
+const ENEMY_R    = 11;
+const ENEMY_N    = 3;
+const INVULN     = 1.5;   // 被追到後的無敵秒數
+const MARGIN     = 44;    // 競技場邊界距離畫面邊緣的留白
+
+const COL_PLAYER = '#4a9eff';
+const COL_ENEMY  = '#ff3b3b';
+
+// dt 以「幀」為單位（1 幀 ≈ 1/60 秒），與正式版 movePlayer 的計算方式相同。
+// 倒數計時等「真實秒數」的數值必須乘上這個換算係數。
+const FRAME_SEC = 1 / 60;
+
+// ---------------------------------------------------------------- 畫布
+const cv  = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0;
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth;
+  H = window.innerHeight;
+  cv.width  = Math.round(W * dpr);
+  cv.height = Math.round(H * dpr);
+  cv.style.width  = W + 'px';
+  cv.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---------------------------------------------------------------- 狀態
+let player, enemies, elapsed, invuln, flash, won, running, hitStop;
+
+function reset() {
+  player   = { x: W / 2, y: H / 2, tx: W / 2, ty: H / 2 };
+  enemies  = [];
+  elapsed  = 0;
+  invuln   = 0;
+  hitStop  = 0;
+  flash    = 0;      // 閃白／閃紅的剩餘強度
+  won      = false;
+  running  = true;
+  for (let i = 0; i < ENEMY_N; i++) enemies.push(spawnEnemy(1.4 + i * 0.25));
+}
+
+// 敵人沿競技場四邊隨機取一點生成
+function spawnEnemy(delay) {
+  const side = Math.floor(Math.random() * 4);
+  const t    = Math.random();
+  const pos  = { x: 0, y: 0, wait: delay };
+  if (side === 0) { pos.x = MARGIN + t * (W - MARGIN * 2); pos.y = MARGIN; }
+  if (side === 1) { pos.x = W - MARGIN;              pos.y = MARGIN + t * (H - MARGIN * 2); }
+  if (side === 2) { pos.x = MARGIN + t * (W - MARGIN * 2); pos.y = H - MARGIN; }
+  if (side === 3) { pos.x = MARGIN;                  pos.y = MARGIN + t * (H - MARGIN * 2); }
+  return pos;
+}
+
+// ---------------------------------------------------------------- 輸入
+function setPointer(cx, cy) { player.tx = cx; player.ty = cy; }
+
+cv.addEventListener('mousemove', e => setPointer(e.clientX, e.clientY));
+cv.addEventListener('touchstart', e => {
+  e.preventDefault();
+  setPointer(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: false });
+cv.addEventListener('touchmove', e => {
+  e.preventDefault();
+  setPointer(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: false });
+
+// 贏了之後點一下就重來（唯一的「重新開始」機制，全程無文字）
+cv.addEventListener('click', () => { if (won) reset(); });
+
+// ---------------------------------------------------------------- 更新
+function update(dt) {
+  if (!running) { flash = Math.max(0, flash - dt * 2.2); hitStop = Math.max(0, hitStop - dt); return; }
+
+  // dt 是「幀數」單位（與正式版一致，用來控制移動速度），
+  // 但倒數計時是「真實秒數」，兩者必須分開換算。
+  elapsed += dt * FRAME_SEC;
+  if (elapsed >= DURATION) { elapsed = DURATION; won = true; running = false; flash = 1; return; }
+
+  if (hitStop > 0) { hitStop -= dt; return; }   // 受擊定格：凍結邏輯與畫面
+
+  if (invuln > 0) invuln -= dt;
+
+  if (flash > 0) flash = Math.max(0, flash - dt * 0.09);
+
+  // 規則：玩家以固定速度朝游標方向走（與正式版手感一致）
+  let dx = player.tx - player.x, dy = player.ty - player.y;
+  const d = Math.hypot(dx, dy);
+  if (d > 3) {
+    player.x += dx / d * PLAYER_SPD * dt;
+    player.y += dy / d * PLAYER_SPD * dt;
+  }
+  player.x = Math.max(MARGIN + PLAYER_R, Math.min(W - MARGIN - PLAYER_R, player.x));
+  player.y = Math.max(MARGIN + PLAYER_R, Math.min(H - MARGIN - PLAYER_R, player.y));
+
+  // 規則：敵人沿直線追向玩家
+  for (const e of enemies) {
+    if (e.wait > 0) { e.wait -= dt; continue; }
+    dx = player.x - e.x; dy = player.y - e.y;
+    const ed = Math.hypot(dx, dy) || 1;
+    e.x += dx / ed * ENEMY_SPD * dt;
+    e.y += dy / ed * ENEMY_SPD * dt;
+    e.x = Math.max(MARGIN, Math.min(W - MARGIN, e.x));
+    e.y = Math.max(MARGIN, Math.min(H - MARGIN, e.y));
+
+    // 碰撞：兩圓重疊即判定被追到
+    if (invuln <= 0 && Math.hypot(e.x - player.x, e.y - player.y) < ENEMY_R + PLAYER_R) {
+      invuln = INVULN;
+      hitStop = 5;
+      flash  = 0.15;
+      player.x = W / 2; player.y = H / 2;
+      player.tx = W / 2; player.ty = H / 2;
+      // 把所有敵人從中心向外推開，避免瞬間再次碰撞
+      for (const en of enemies) {
+        const ddx = en.x - W / 2, ddy = en.y - H / 2;
+        const ed = Math.hypot(ddx, ddy) || 1;
+        const push = ENEMY_R + PLAYER_R + 40;
+        en.x = W / 2 + ddx / ed * push;
+        en.y = H / 2 + ddy / ed * push;
+        en.x = Math.max(MARGIN, Math.min(W - MARGIN, en.x));
+        en.y = Math.max(MARGIN, Math.min(H - MARGIN, en.y));
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------- 繪製
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // 競技場邊界：只畫一條極暗的細框，用形狀界定空間
+  ctx.strokeStyle = '#15151c';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(MARGIN, MARGIN, W - MARGIN * 2, H - MARGIN * 2);
+
+  // 敵人
+  for (const e of enemies) {
+    if (e.wait > 0) continue;
+    ctx.fillStyle = COL_ENEMY;
+    ctx.beginPath(); ctx.arc(e.x, e.y, ENEMY_R, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // 玩家（無敵期間閃爍）
+  if (invuln <= 0 || Math.floor(invuln * 12) % 2 === 0) {
+    ctx.fillStyle = COL_PLAYER;
+    ctx.beginPath(); ctx.arc(player.x, player.y, PLAYER_R, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // 倒計時橫條：全場唯一的介面元素。顏色由藍漸變為紅，不顯示任何數字。
+  const pct = elapsed / DURATION;
+  ctx.fillStyle = '#1a1a22';
+  ctx.fillRect(0, 0, W, 3);
+  ctx.fillStyle = `rgb(${Math.round(74 + pct * 181)}, ${Math.round(158 - pct * 61)}, ${Math.round(255 - pct * 212)})`;
+  ctx.fillRect(0, 0, W * pct, 3);
+
+  // 閃光：被追到時整片泛紅，撐到最後泛白。全場無文字。
+  if (flash > 0) {
+    const a = won ? flash * 0.9 : flash;
+    ctx.fillStyle = won
+      ? `rgba(255,255,255,${a})`
+      : `rgba(255,${Math.round(59 + a * 60)},${Math.round(59 + a * 60)},${a})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+// ---------------------------------------------------------------- 主迴圈
+// dt 以 1/60 秒為單位並限制在 3 格內，確保 60Hz 與 144Hz 螢幕速度一致
+let last = 0;
+function loop(ts) {
+  requestAnimationFrame(loop);
+  if (!last) last = ts;
+  const dt = Math.min((ts - last) / 16.667, 3);
+  last = ts;
+  update(dt);
+  draw();
+}
+
+reset();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Stage 2 — Game Feel</title>
+<!--
+  ============================================================
+  STAGE 2 / 遊戲手感  (Game Feel)
+  ============================================================
+  規則完全沒變 —— 跟 Stage 1 一模一樣：
+  游標操控、紅球追你、撐 30 秒。
+
+  這個階段只加「感覺」。它回答一個問題：
+  為什麼同一套規則，加上美術與音效之後會讓人想再玩一次？
+
+  本階段新增：
+    · 真實角色 / 敵人 / 收集物 sprite（2 幀走路循環，10fps）
+    · 深色格線背景 + 暗角（vignette）
+    · 收集物浮動（正弦擺動）與到期淡出
+    · 粒子爆發（採集時 / 被撞時）
+    · 受擊震屏（shake，帶衰減）
+    · 受擊定格（hit-stop，凍結數幀 —— 這一條影響最大）
+    · 紅色傷害數字往上飄
+    · 無敵期間角色閃爍 + 移動殘影（trail）
+    · 誠信值條（綠 → 琥珀 → 紅）與分數、計時 HUD
+    · WebAudio 合成音效（拾取 / 撞擊 / 結束）
+
+  本階段仍然「不做」：
+    沒有劇情、沒有角色選擇、沒有敵人命名、
+    沒有技能、沒有 tooltip、沒有教學文字、沒有評分。
+
+  注意：四種敵人「外觀不同但行為完全相同」。
+  這個差異是刻意的 —— 讓觀眾清楚看見
+  「呈現」和「意義」是兩件可以分開設計的事。
+  意義要到 Stage 3 才會被加上去。
+
+  音效全部由 WebAudio 即時合成，零音檔。
+  ============================================================
+-->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #07070d; }
+  body { cursor: none; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button id="btn-skip" style="position:absolute;top:8px;right:8px;z-index:10;display:none;padding:4px 8px;font-size:14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⏭</button>
+<button id="btn-restart" style="position:absolute;top:8px;right:52px;z-index:10;display:none;padding:4px 8px;font-size:14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⟳</button>
+<script>
+'use strict';
+
+const DEMO_SKIP = location.search.includes('skip=1') || (() => { try { return localStorage.getItem('academic_demo_skip') === '1'; } catch (e) { return false; } })();
+const skipBtn = document.getElementById('btn-skip');
+if (DEMO_SKIP && skipBtn) skipBtn.style.display = 'block';
+skipBtn?.addEventListener('click', () => { finish(true); });
+
+const restartBtn = document.getElementById('btn-restart');
+if (DEMO_SKIP && restartBtn) restartBtn.style.display = 'block';
+restartBtn?.addEventListener('click', () => { reset(); });
+
+// ================================================================ 常數
+// 數值沿用正式版 config.js（Stage 4 會把這些搬進設定檔）
+// 注意：dt 以「幀」為單位（1 幀 ≈ 1/60 秒），與正式版 movePlayer 相同。
+//       因此「以秒為單位」的變數都必須乘上 FRAME_SEC 換算。
+const FRAME_SEC = 1 / 60;
+const DURATION = 30;
+const MOVE_SPD = 3.0;              // [PLAYER] move_speed
+const INVINCIBILITY_MS = 800;     // [PLAYER] invincibility_ms
+const SPAWN_ENEMY_SEC = 4.0;      // 敵人補充間隔
+const MAX_ENEMY = 7;
+const ANIM_FPS = 10;              // [ANIMATION] animation_fps
+const PLAYER_R = 22, ENEMY_R = 19;
+const MARGIN = 52;
+
+// 敵人參數：[ENEMY_*] speed / damage
+// tier 只表示「多危險」——這是純機制層的資訊，不透露任何領域詞彙。
+// 顏色刻意用「空心環」，與收集物的「實心光暈」在形狀上區隔，避免混淆。
+const THREAT = [
+  { tier: 1, color: '#f5c842' },  // 低
+  { tier: 2, color: '#f97316' },  // 中
+  { tier: 3, color: '#ef4444' },  // 高
+];
+const ENEMY_TYPES = [
+  { key: 'e_plagiarism', speed: 1.9, damage: 30, weight: 3, tier: 2 },
+  { key: 'e_aiblob',     speed: 1.4, damage: 20, weight: 3, tier: 2 },
+  { key: 'e_essaymill',  speed: 2.0, damage: 50, weight: 2, tier: 3 },
+  { key: 'e_fakesource', speed: 1.7, damage: 12, weight: 2, tier: 1 },
+];
+
+// ================================================================ 素材
+const IMG = {};
+const IMG_PATHS = [
+  'img/player_idle_1.png', 'img/player_move_1.png', 'img/player_move_2.png',
+  'img/e_plagiarism.png', 'img/e_aiblob.png', 'img/e_essaymill.png', 'img/e_fakesource.png',
+];
+let assetsReady = false;
+function loadAssets() {
+  let left = IMG_PATHS.length;
+  for (const p of IMG_PATHS) {
+    const im = new Image();
+    im.onload = im.onerror = () => { if (--left === 0) assetsReady = true; };
+    im.src = p;
+    IMG[p.replace(/^img\//, '').replace(/\.png$/, '')] = im;
+  }
+}
+
+// ================================================================ 音效（WebAudio 合成）
+const Sfx = {
+  ac: null, muted: false,
+  ctx() {
+    if (!this.ac) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) this.ac = new AC(); }
+    if (this.ac && this.ac.state === 'suspended') this.ac.resume();
+    return this.ac;
+  },
+  tone(type, f0, f1, dur, vol) {
+    const ac = this.ctx(); if (!ac || this.muted) return;
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), ac.currentTime + dur);
+    g.gain.setValueAtTime(vol, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + dur);
+  },
+  noise(dur, vol, freq) {
+    const ac = this.ctx(); if (!ac || this.muted) return;
+    const n = ac.sampleRate * dur, buf = ac.createBuffer(1, n, ac.sampleRate), ch = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ac.createBufferSource(); src.buffer = buf;
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq;
+    const g = ac.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(ac.destination); src.start();
+  },
+  collect() { this.tone('triangle', 620, 1080, 0.10, 0.16); },
+  hit()     { this.tone('sawtooth', 180, 55, 0.30, 0.22); this.noise(0.22, 0.20, 900); },
+  end(win)  { const s = win ? [523, 659, 880] : [330, 247, 165]; s.forEach((f, i) => setTimeout(() => this.tone('triangle', f, f, 0.28, 0.16), i * 130)); },
+};
+
+// ================================================================ 畫布
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0;
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resize); resize();
+
+// ================================================================ 狀態
+let player, enemies, particles, floats;
+let integrity, score, elapsed, invuln, hitStop, shake, flash, outcome, animT, animFrame;
+let enemyTimer;
+
+function reset() {
+  player = { x: W / 2, y: H / 2, tx: W / 2, ty: H / 2, trail: [], moving: false, r: PLAYER_R };
+  enemies = []; particles = []; floats = [];
+  integrity = 100; score = 0; elapsed = 0;
+  invuln = 0; hitStop = 0; shake = 0; flash = 0; outcome = null;
+  animT = 0; animFrame = 0;
+  enemyTimer = 2.5;
+  for (let i = 0; i < 3; i++) spawnEnemy();
+}
+
+function pickWeighted(list) {
+  const total = list.reduce((s, o) => s + o.weight, 0);
+  let r = Math.random() * total;
+  for (const o of list) { if ((r -= o.weight) <= 0) return o; }
+  return list[list.length - 1];
+}
+
+function edgePoint() {
+  const side = Math.floor(Math.random() * 4), t = Math.random();
+  return { x: MARGIN + t * (W - MARGIN * 2), y: MARGIN + t * (H - MARGIN * 2) };
+}
+function spawnEnemy() {
+  const type = pickWeighted(ENEMY_TYPES);
+  const t = THREAT[type.tier - 1];
+  enemies.push(Object.assign(edgePoint(), { img: IMG[type.key], speed: type.speed, damage: type.damage, tier: type.tier, threatColor: t.color, r: ENEMY_R, wait: 1.2 + Math.random() * 0.8 }));
+}
+// ================================================================ 輸入
+function setPointer(x, y) { player.tx = x; player.ty = y; }
+cv.addEventListener('mousemove', e => setPointer(e.clientX, e.clientY));
+cv.addEventListener('touchstart', e => { e.preventDefault(); setPointer(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+cv.addEventListener('touchmove',  e => { e.preventDefault(); setPointer(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+cv.addEventListener('click', () => { if (outcome) { if (Sfx.ac) Sfx.ac.resume(); reset(); } });
+
+// 左上角靜音鈕（繪製在畫布上，非 DOM），鍵盤 M 也可以
+let btnHover = false, muted = false;
+cv.addEventListener('mousemove', e => { btnHover = e.clientX < 54 && e.clientY < 54; });
+window.addEventListener('keydown', e => { if (e.key === 'm' || e.key === 'M') { Sfx.muted = !Sfx.muted; muted = Sfx.muted; } });
+
+// ================================================================ 特效
+function burst(x, y, color, n, spd) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * 6.283, s = spd * (0.35 + Math.random() * 0.9);
+    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, color, life: 1, max: 1, size: 2 + Math.random() * 3 });
+  }
+}
+function addFloat(x, y, text, color) { floats.push({ x, y, text, color, life: 1, vy: -1.5 }); }
+
+// ================================================================ 更新
+function update(dt) {
+  if (outcome) { flash = Math.max(0, flash - dt * 0.06); stepParticles(dt); return; }
+  if (hitStop > 0) { hitStop -= dt; return; }   // 受擊定格：凍結邏輯畫面
+
+  elapsed += dt * FRAME_SEC;
+  if (elapsed >= DURATION) { elapsed = DURATION; finish(true); return; }
+  if (integrity <= 0) { finish(false); return; }
+
+  if (invuln > 0) invuln -= dt * 16.667;
+  if (flash  > 0) flash  = Math.max(0, flash  - dt * 0.09);
+  if (shake  > 0) shake  = Math.max(0, shake  - dt * 0.45);
+
+  // --- 玩家：以固定速度朝游標走（沿用正式版手感）
+  let dx = player.tx - player.x, dy = player.ty - player.y, d = Math.hypot(dx, dy);
+  if (d > 3) { player.x += dx / d * MOVE_SPD * dt; player.y += dy / d * MOVE_SPD * dt; player.moving = true; }
+  else player.moving = false;
+  player.x = Math.max(MARGIN + PLAYER_R, Math.min(W - MARGIN - PLAYER_R, player.x));
+  player.y = Math.max(MARGIN + PLAYER_R, Math.min(H - MARGIN - PLAYER_R, player.y));
+  player.trail.unshift({ x: player.x, y: player.y });
+  if (player.trail.length > 14) player.trail.pop();
+
+  // --- 敵人：直線追擊
+  for (const e of enemies) {
+    if (e.wait > 0) { e.wait -= dt * FRAME_SEC; continue; }
+    dx = player.x - e.x; dy = player.y - e.y;
+    const ed = Math.hypot(dx, dy) || 1;
+    e.x += dx / ed * e.speed * dt; e.y += dy / ed * e.speed * dt;
+    e.x = Math.max(MARGIN, Math.min(W - MARGIN, e.x));
+    e.y = Math.max(MARGIN, Math.min(H - MARGIN, e.y));
+  }
+
+  // --- 敵人碰撞 → 扣誠信值
+  if (invuln <= 0) {
+    for (const e of enemies) {
+      if (e.wait > 0) continue;
+      if (Math.hypot(e.x - player.x, e.y - player.y) < e.r + player.r) {
+        integrity = Math.max(0, integrity - e.damage);
+        invuln = INVINCIBILITY_MS; hitStop = 5; shake = 14; flash = 0.3;
+        burst(player.x, player.y, '#ff3b3b', 16, 4.2);
+        addFloat(player.x, player.y - 30, '-' + e.damage, '#ff5c5c');
+        Sfx.hit();
+        break;
+      }
+    }
+  }
+
+  // --- 敵人補充（秒）
+  enemyTimer -= dt * FRAME_SEC;
+  if (enemyTimer <= 0 && enemies.length < MAX_ENEMY) { spawnEnemy(); enemyTimer = SPAWN_ENEMY_SEC; }
+
+  stepParticles(dt);
+}
+
+function stepParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.93; p.vy *= 0.93;
+    p.life -= dt * 0.055;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  for (let i = floats.length - 1; i >= 0; i--) {
+    const f = floats[i];
+    f.y += f.vy * dt; f.life -= dt * 0.028;
+    if (f.life <= 0) floats.splice(i, 1);
+  }
+}
+
+function finish(win) { outcome = win ? 'win' : 'lose'; flash = 1; Sfx.end(win); }
+// ================================================================ 繪製
+function drawSprite(img, x, y, d) {
+  if (img && img.complete && img.naturalWidth) ctx.drawImage(img, x - d / 2, y - d / 2, d, d);
+  else { ctx.fillStyle = '#4a9eff55'; ctx.beginPath(); ctx.arc(x, y, d / 2, 0, 6.283); ctx.fill(); }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景：深色格線（沿用正式版的座標網格感）
+  ctx.strokeStyle = 'rgba(74,158,255,0.045)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = (MARGIN % 36); x < W; x += 36) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); }
+  for (let y = (MARGIN % 36); y < H; y += 36) { ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(74,158,255,0.10)';
+  ctx.strokeRect(MARGIN + 0.5, MARGIN + 0.5, W - MARGIN * 2 - 1, H - MARGIN * 2 - 1);
+
+  // 敵人：依威脅程度套上不同顏色的空心環（顏色＝危險度，不是敵人種類）
+  for (const e of enemies) {
+    if (e.wait > 0) continue;
+    ctx.strokeStyle = e.threatColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 9, 0, 6.283); ctx.stroke();
+    drawSprite(e.img, e.x, e.y, e.r * 2.4);
+  }
+
+  // 玩家殘影 + 本體
+  player.trail.forEach((t, i) => {
+    ctx.fillStyle = `rgba(74,158,255,${(1 - i / 14) * 0.13})`;
+    ctx.beginPath(); ctx.arc(t.x, t.y, player.r * (1 - i / 18), 0, 6.283); ctx.fill();
+  });
+  if (invuln <= 0 || Math.floor(invuln / 60) % 2 === 0) {
+    const f = player.moving ? 1 : 0;
+    drawSprite(f ? IMG['player_move_' + (animFrame % 2 + 1)] : IMG['player_idle_1'], player.x, player.y, player.r * 2.4);
+  }
+
+  // 粒子
+  for (const p of particles) {
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, 6.283); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // 飄字（傷害 / 分數）
+  ctx.textAlign = 'center'; ctx.font = 'bold 15px ui-monospace, monospace';
+  for (const f of floats) {
+    ctx.globalAlpha = Math.max(0, f.life);
+    ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
+  }
+  ctx.globalAlpha = 1;
+
+  drawHud();
+  drawThreatLegend();
+  drawVignette();
+  drawMuteBtn();
+
+  if (flash > 0) {
+    const a = flash * 0.85;
+    ctx.fillStyle = outcome === 'win' ? `rgba(255,255,255,${a})` : `rgba(255,40,40,${a})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function drawVignette() {
+  const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+function drawHud() {
+  // 生命條：綠 → 琥珀 → 紅
+  const bw = 220, bx = 22, by = 26;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(bx - 8, by - 8, bw + 16, 14);
+  ctx.fillStyle = '#1a1a22'; ctx.fillRect(bx, by, bw, 8);
+  const p = integrity / 100;
+  const col = p > 0.6 ? '#22c55e' : p > 0.3 ? '#f59e0b' : '#ef4444';
+  ctx.fillStyle = col; ctx.fillRect(bx, by, bw * p, 8);
+
+  // ★ 這裡刻意不寫 INTEGRITY。Stage 2 還不能洩漏領域詞彙 ——
+  //   「誠信」是 Stage 3 才該給的概念，這一階段只有一條會歸零的條。
+  ctx.font = '11px ui-monospace, monospace'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('LIFE', bx, by - 14);
+  ctx.fillText('SCORE', bx + 250, by - 14);
+  ctx.fillText('TIME', bx + 340, by - 14);
+  ctx.font = 'bold 20px ui-monospace, monospace';
+  ctx.fillStyle = col;  ctx.fillText(Math.round(integrity), bx + 250, by + 8);
+  ctx.fillStyle = '#e2e8f0'; ctx.fillText(score, bx + 320, by + 8);
+  ctx.fillStyle = elapsed > DURATION - 5 ? '#ef4444' : '#e2e8f0';
+  ctx.fillText(Math.max(0, Math.ceil(DURATION - elapsed)) + 's', bx + 380, by + 8);
+}
+
+// 威脅圖例：只說「多危險」，不說那是什麼 —— 那是 Stage 3 的工作
+function drawThreatLegend() {
+  const bx = W - 132, by = H - 58;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(bx - 10, by - 14, 122, 50);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.font = '9px ui-monospace, monospace'; ctx.fillStyle = '#64748b';
+  ctx.fillText('THREAT', bx, by - 5);
+  const names = ['LOW', 'MED', 'HIGH'];
+  for (let i = 0; i < 3; i++) {
+    const y = by + 8 + i * 13;
+    ctx.strokeStyle = THREAT[i].color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(bx + 7, y, 6, 0, 6.283); ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(names[i], bx + 20, y);
+  }
+  ctx.textBaseline = 'alphabetic';
+}
+
+function drawMuteBtn() {
+  ctx.globalAlpha = btnHover || muted ? 1 : 0.5;
+  ctx.fillStyle = 'rgba(10,10,30,0.8)'; ctx.fillRect(12, 12, 34, 22);
+  ctx.strokeStyle = '#334'; ctx.strokeRect(12.5, 12.5, 33, 21);
+  ctx.fillStyle = muted ? '#ef4444' : '#22c55e';
+  ctx.beginPath(); ctx.arc(23, 23, 4, 0, 6.283); ctx.fill();
+  ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 9px ui-monospace, monospace'; ctx.textAlign = 'left';
+  ctx.fillText('M', 32, 26);
+  ctx.globalAlpha = 1;
+}
+
+// ================================================================ 主迴圈
+let last = 0;
+function loop(ts) {
+  requestAnimationFrame(loop);
+  if (!last) last = ts;
+  const dt = Math.min((ts - last) / 16.667, 3);
+  last = ts;
+
+  if (assetsReady) {
+    animT += dt;
+    if (animT * ANIM_FPS / 60 >= 1) { animT = 0; animFrame++; }
+  }
+  update(dt);
+
+  // 震屏：整個場景位移，帶衰減
+  const s = shake > 0 ? shake * Math.random() : 0;
+  ctx.save();
+  ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+  draw();
+  ctx.restore();
+}
+
+loadAssets();
+reset();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

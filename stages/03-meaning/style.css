@@ -1,0 +1,182 @@
+/* style.css — Stage 3 / 意義 (Meaning)
+   深色夢境介面。沿用 Stage 4 正式版的視覺語言（暗底、等寬字、琥珀色標題），
+   但只保留 Stage 3 真正用得到的元件 —— 技能徽章、tooltip 框、
+   結算畫面、登入框全部不見，因為那些是 Stage 4 的東西。 */
+
+:root {
+  --bg:        #05050c;
+  --panel:     rgba(6, 8, 24, 0.94);
+  --border:    #26304a;
+  --text:      #e6ecff;
+  --muted:     #7d8aa8;
+  --amber:     #f5c842;
+  --green:     #22c55e;
+  --red:       #e24b4b;
+  --blue:      #4a9eff;
+  --mono:      ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--text);
+  font-family: var(--mono);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { position: relative; width: 100vw; height: 100vh; }
+#game-canvas { position: absolute; inset: 0; display: block; cursor: none; }
+
+/* ---- 螢幕層 ---- */
+.screen {
+  position: absolute; inset: 0; z-index: 10;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(3, 4, 12, 0.88);
+  padding: 24px;
+}
+.screen.active { display: flex; }
+.screen.pass { background: transparent; pointer-events: none; }
+
+/* ---- 載入 ---- */
+.loading-text { font-size: 30px; letter-spacing: 0.34em; color: var(--amber); }
+.loading-sub  { margin-top: 14px; font-size: 12px; color: var(--muted); letter-spacing: 0.1em; }
+
+/* ---- 過場動畫 ---- */
+/* 過場圖是畫在 #game-canvas 上的，這一層只負責接收點擊，背景必須透明。
+   填成不透明色會把 canvas 整片蓋掉：canvas 的 z-index 是 auto(=0)，
+   而這一層是 z-index:40，結果使用者只看到一片全黑，只剩右上角計數
+   與底部提示文字（V21 原本的 .screen 沒有 background 屬性，所以正式版沒這個問題）。
+   黑色底由 game.js 的 drawCutscene() 自己在 canvas 上填。 */
+.cutscene-screen { background: transparent; cursor: pointer; z-index: 40; }
+.cutscene-counter {
+  position: absolute; top: 20px; right: 26px;
+  font-size: 13px; color: var(--muted); letter-spacing: 0.12em;
+}
+.cutscene-hint {
+  position: absolute; bottom: 26px; left: 0; right: 0; text-align: center;
+  font-size: 12px; color: rgba(255, 255, 255, 0.45); letter-spacing: 0.1em;
+  animation: pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.8; } }
+
+/* ---- 面板 ---- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 34px 40px;
+  max-width: 560px; width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
+  animation: rise 0.4s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.panel.wide { max-width: 760px; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+h1 { font-size: 30px; letter-spacing: 0.2em; color: var(--amber); font-weight: 700; }
+h2 { font-size: 20px; letter-spacing: 0.14em; color: var(--amber); font-weight: 700; }
+.subtitle { margin-top: 10px; font-size: 12px; color: var(--muted); letter-spacing: 0.08em; }
+.pitch { margin-top: 20px; font-size: 13px; line-height: 1.95; color: #a9b6d4; }
+
+.btn {
+  display: block; width: 100%; margin-top: 26px;
+  padding: 14px 20px;
+  background: var(--green); color: #04180c;
+  border: none; border-radius: 6px;
+  font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 0.14em;
+  cursor: pointer; transition: transform 0.12s, filter 0.12s;
+}
+.btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.btn.ghost {
+  margin-top: 10px; background: transparent; color: var(--muted);
+  border: 1px solid var(--border); font-weight: 400;
+}
+
+/* ---- HUD ---- */
+#hud-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 20px; font-size: 11px;
+  background: linear-gradient(180deg, rgba(4, 5, 14, 0.95), rgba(4, 5, 14, 0));
+}
+#hud-top .lbl { color: var(--muted); letter-spacing: 0.14em; }
+#hud-top .val { color: var(--text); font-weight: 700; }
+.bar {
+  width: 130px; height: 9px; background: #161b2c;
+  border: 1px solid #232b45; border-radius: 2px; overflow: hidden;
+}
+#hud-bar { height: 100%; width: 100%; background: var(--green); transition: width 0.2s linear; }
+#hud-assign {
+  position: absolute; top: 42px; left: 20px;
+  font-size: 11px; color: var(--amber); letter-spacing: 0.1em;
+}
+
+/* ---- 論文面板（Stage 3 的核心回饋通道）---- */
+#essay-panel {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 12px 20px 14px;
+  background: linear-gradient(0deg, rgba(3, 4, 12, 0.96) 60%, rgba(3, 4, 12, 0));
+}
+.essay-label { font-size: 9.5px; color: var(--muted); letter-spacing: 0.24em; margin-bottom: 6px; }
+#essay-body {
+  max-height: 68px; overflow: hidden;
+  font-size: 11.5px; line-height: 1.75; color: #9fb0cc;
+}
+#essay-body .ok   { color: #7ee7a8; }
+#essay-body .bad  { color: #e2748a; text-decoration-color: #a33; }
+.essay-empty { color: #46516d; font-style: italic; }
+
+/* ---- 過場卡 ---- */
+.clear-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 18px; padding: 13px 16px;
+  background: #0c1020; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 12.5px; color: #b9c6e0;
+}
+.clear-row.next { border-style: dashed; }
+.clear-row .val { color: var(--amber); font-weight: 700; }
+.clear-row.next .val { color: var(--green); }
+
+.grad { font-size: 52px; line-height: 1; }
+#complete-list { margin-top: 24px; }
+.comp-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 16px; margin-bottom: 8px;
+  background: #0c1020; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 12px; color: #b9c6e0; text-align: left;
+}
+.comp-row .val { color: var(--muted); font-size: 11px; }
+
+/* ---- 致命錯誤橫幅 ---- */
+/* config.js 載入失敗時，舊版只 console.warn，使用者只會看到一片全黑，
+   完全不知道發生了什麼。現在把錯誤直接畫在畫面上。 */
+#fatal-banner {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 90;
+  display: none;
+  padding: 12px 20px;
+  background: #7f1d1d; border-bottom: 2px solid #ef4444;
+  color: #fee2e2; font-size: 12px; line-height: 1.7;
+}
+#fatal-banner.show { display: block; }
+#fatal-banner b { color: #fff; }
+#fatal-banner code {
+  background: rgba(0, 0, 0, 0.45); padding: 1px 5px; border-radius: 3px;
+  color: #fecaca; font-size: 11px;
+}
+
+/* ---- 靜音鈕 ---- */
+#mute-btn {
+  position: absolute; bottom: 12px; right: 14px; z-index: 60;
+  width: 34px; height: 26px;
+  background: rgba(8, 10, 26, 0.8); border: 1px solid var(--border);
+  border-radius: 4px; font-size: 13px; cursor: pointer;
+}
+#mute-btn:hover { background: rgba(20, 26, 52, 0.95); }
+
+@media (max-width: 720px) {
+  .roles { grid-template-columns: 1fr; }
+  h1 { font-size: 21px; }
+  .panel { padding: 24px 20px; }
+}

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>The Academic Trial — Stage 3 (Meaning)</title>
+<link rel="stylesheet" href="style.css?v=20260930a">
+</head>
+<body>
+
+<div id="app">
+  <canvas id="game-canvas"></canvas>
+
+  <button id="mute-btn" title="M">🔊</button>
+  <button id="btn-skip" title="Skip level" style="display:none;padding:4px 8px;font-size:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⏭</button>
+  <button id="btn-restart" title="Restart" style="display:none;padding:4px 8px;font-size:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⟳</button>
+
+  <!-- FATAL（載入失敗時顯示，避免「只有全黑、沒有任何線索」）-->
+  <div id="fatal-banner"></div>
+
+  <!-- LOADING -->
+  <div id="screen-loading" class="screen active">
+    <div class="loading-text">LOADING</div>
+    <div class="loading-sub" id="loading-sub">Loading config…</div>
+  </div>
+
+  <!-- CUTSCENE -->
+  <div id="screen-cutscene" class="screen cutscene-screen" onclick="Game.advanceCutscene()">
+    <div class="cutscene-counter"><span id="cutscene-n">1</span> / <span id="cutscene-total">1</span></div>
+    <div class="cutscene-hint">Click or tap to continue →</div>
+  </div>
+
+  <!-- TITLE -->
+  <div id="screen-title" class="screen">
+    <div class="panel">
+      <h1 id="game-title">THE ACADEMIC TRIAL</h1>
+      <p class="subtitle">Academic Integrity Quest</p>
+      <p class="pitch">
+        You are surrounded. Things are chasing you, and you do not know what they are.<br>
+        Survive four assignments, gather real sources, and build something of your own.
+      </p>
+      <button class="btn" onclick="Game.startGame()">START</button>
+    </div>
+  </div>
+
+  <!-- ARENA -->
+  <div id="screen-arena" class="screen pass">
+    <div id="hud-top">
+      <span class="lbl">LEVEL</span><span class="val" id="hud-level">1/4</span>
+      <span class="lbl">INTEGRITY</span>
+      <div class="bar"><div id="hud-bar"></div></div>
+      <span class="val" id="hud-integrity">100%</span>
+      <span class="lbl">SOURCES</span><span class="val" id="hud-score">0</span>
+      <span class="lbl">TIME</span><span class="val" id="hud-time">35s</span>
+    </div>
+    <div id="hud-assign">First Assignment</div>
+    <div id="essay-panel">
+      <div class="essay-label">YOUR ESSAY</div>
+      <div id="essay-body"><span class="essay-empty">Collect sources. Every legitimate source adds a sentence.</span></div>
+    </div>
+  </div>
+
+  <!-- LEVEL CLEAR（Stage 3 只有流程，沒有評分） -->
+  <div id="screen-clear" class="screen">
+    <div class="panel">
+      <h2 id="clear-head">ASSIGNMENT COMPLETE</h2>
+      <div class="clear-row"><span id="clear-done">First Assignment</span><span class="val" id="clear-score">0 sources</span></div>
+      <div class="clear-row next"><span>Next</span><span class="val" id="clear-next">Research Paper</span></div>
+      <button class="btn" onclick="Game.nextLevel()">CONTINUE →</button>
+    </div>
+  </div>
+
+  <!-- COMPLETE -->
+  <div id="screen-complete" class="screen">
+    <div class="panel">
+      <div class="grad">🎓</div>
+      <h2>YOU GRADUATED</h2>
+      <p class="subtitle" id="complete-sub">Four assignments. Four essays. One record.</p>
+      <div id="complete-list"></div>
+      <button class="btn ghost" onclick="location.reload()">PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js?v=20260930a"></script>
+<script src="config-parser.js?v=20260930a"></script>
+<script src="asset-loader.js?v=20260930a"></script>
+<script src="audio.js?v=20260930a"></script>
+<script src="game.js?v=20260930a"></script>
+<script>
+'use strict';
+
+const DEMO_SKIP = location.search.includes('skip=1') || (() => { try { return localStorage.getItem('academic_demo_skip') === '1'; } catch (e) { return false; } })();
+const skipBtn = document.getElementById('btn-skip');
+if (DEMO_SKIP && skipBtn) skipBtn.style.display = 'block';
+skipBtn?.addEventListener('click', () => { if (Game && Game.clearLevel) Game.clearLevel(); });
+
+const restartBtn = document.getElementById('btn-restart');
+if (DEMO_SKIP && restartBtn) restartBtn.style.display = 'block';
+restartBtn?.addEventListener('click', () => { if (Game && Game.init) Game.init(); });
+
+const UI = {
+  map: {
+    loading: 'screen-loading', cutscene: 'screen-cutscene', title: 'screen-title',
+    arena: 'screen-arena', clear: 'screen-clear', complete: 'screen-complete',
+  },
+
+  showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(this.map[name] || name);
+    if (el) el.classList.add('active');
+  },
+
+  setLoading(t) { document.getElementById('loading-sub').textContent = t; },
+
+  // ★ 把致命錯誤畫到畫面上。舊版只有 console.warn，使用者看到的是一片全黑，
+  //   完全無從判斷是設定檔沒載到、還是程式哪裡壞了。
+  fatal(msg, hint) {
+    const el = document.getElementById('fatal-banner');
+    if (!el) return;
+    el.innerHTML = '<b>Stage 3 無法正常載入</b> — ' + String(msg).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))
+      + (hint ? '<br>' + hint : '');
+    el.classList.add('show');
+  },
+  clearFatal() { const el = document.getElementById('fatal-banner'); if (el) el.classList.remove('show'); },
+  setCutsceneCounter(n, total) {
+    document.getElementById('cutscene-n').textContent = n;
+    document.getElementById('cutscene-total').textContent = total;
+  },
+
+  updateHUD(g) {
+    const lv = g.levelNum, a = g.arena;
+    document.getElementById('hud-level').textContent = lv + '/4';
+    const p = g.integrity;
+    document.getElementById('hud-bar').style.width = p + '%';
+    document.getElementById('hud-bar').style.background =
+      p > 60 ? '#22c55e' : p > 30 ? '#f59e0b' : '#ef4444';
+    document.getElementById('hud-integrity').textContent = Math.round(p) + '%';
+    document.getElementById('hud-score').textContent = g.score;
+    const t = Math.max(0, Math.ceil(g.waveTimer));
+    const te = document.getElementById('hud-time');
+    te.textContent = t + 's';
+    te.style.color = t <= 5 ? '#ef4444' : '#e2e8f0';
+    document.getElementById('hud-assign').textContent = g.level.assignmentName;
+  },
+
+  // ★ Stage 3 新增的回饋通道：論文面板隨遊戲即時成長
+  updateEssay(chunks) {
+    const el = document.getElementById('essay-body');
+    if (!chunks.length) { el.innerHTML = '<span class="essay-empty">Collect sources. Every legitimate source adds a sentence.</span>'; return; }
+    el.innerHTML = chunks.slice(-14).map(c =>
+      c.t === 'g' ? `<span class="ok">${c.text}</span> ` : `<s class="bad">${c.text}</s> `
+    ).join('');
+    el.scrollTop = el.scrollHeight;
+  },
+
+  showClear(n, done, next, score) {
+    document.getElementById('clear-head').textContent = 'LEVEL ' + n + ' COMPLETE';
+    document.getElementById('clear-done').textContent = done;
+    document.getElementById('clear-score').textContent = score + ' sources';
+    document.getElementById('clear-next').textContent = next;
+    this.showScreen('clear');
+  },
+
+  renderComplete(scores, title) {
+    document.getElementById('complete-list').innerHTML = scores.map((s, i) => `
+      <div class="comp-row"><span>${i + 1}. ${s.name}</span><span class="val">${s.score} sources · ${s.integrity}% integrity</span></div>
+    `).join('');
+  },
+};
+
+// ---- 輸入 --------------------------------------------------------------
+const cv = document.getElementById('game-canvas');
+function move(e) { if (Game.player) { Game.player.tx = e.clientX; Game.player.ty = e.clientY; } }
+cv.addEventListener('mousemove', move);
+cv.addEventListener('touchstart', e => { e.preventDefault(); move(e.touches[0]); }, { passive: false });
+cv.addEventListener('touchmove',  e => { e.preventDefault(); move(e.touches[0]); }, { passive: false });
+// ★ 過場卡與結算畫面期間也要能重算尺寸，否則在那些畫面把視窗縮放後
+//   一進下一關，競技場的座標系會沿用舊的視窗大小。
+window.addEventListener('resize', () => {
+  if (['arena', 'clear', 'complete'].indexOf(Game.state) >= 0) Game.resize();
+});
+
+// ---- 靜音 --------------------------------------------------------------
+let muted = false;
+function toggleMute() {
+  muted = !muted; Music.resume(); Music.setMuted(muted);
+  document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+}
+window.addEventListener('keydown', e => {
+  if (e.key === 'm' || e.key === 'M') { toggleMute(); return; }
+  // 過場除了滑鼠點擊，也要能用空白鍵／Enter 推進。
+  // 少了這段，按空白鍵的使用者會什麼事都沒發生，以為是當機。
+  const cut = document.getElementById('screen-cutscene');
+  if (cut && cut.classList.contains('active') &&
+      (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter')) {
+    e.preventDefault();
+    Game.advanceCutscene();
+  }
+});
+
+window.addEventListener('load', () => Game.init());
+</script>
+</body>
+</html>

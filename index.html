@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE ACADEMIC TRIAL — 從骨架到課堂 | Demo Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   切換器視覺方向：「開發者考古／博物館展覽」
+   深炭底 + 顆粒紋理 + 策展標籤式排版。
+   每個階段一個強調色，沿用遊戲內既有色（骨白／琥珀／紫／綠），
+   讓「階段」和「遊戲本身」在視覺上是同一套語言。
+   ============================================================ */
+:root{
+  --bg:#0a0a0c; --bg2:#101014; --panel:#14141a; --line:#26262e;
+  --ink:#e9e7e2; --dim:#8d8b85; --dimmer:#5e5c58;
+  --s1:#e8eaed; --s2:#f5c842; --s3:#a855f7; --s4:#22c55e;  --accent:var(--s1);
+  --display:"Bricolage Grotesque","Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --serif:"Spectral",Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--mono); font-size:14px; line-height:1.6;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* 顆粒疊層：讓大面積深底不至於死板 */
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:999; opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.shell{display:flex;flex-direction:column;height:100vh}
+
+/* ---------- 頂部版本列 ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:22px;
+  padding:12px 28px;border-bottom:1px solid var(--line);background:var(--bg2);
+  flex-shrink:0;
+}
+.topbar .brand{display:flex;align-items:baseline;gap:12px;min-width:0}
+.topbar .brand .kicker{font-size:9px;letter-spacing:.28em;color:var(--dimmer);text-transform:uppercase;white-space:nowrap}
+.topbar .brand .mark{font-family:var(--display);font-size:15px;font-weight:800;letter-spacing:.02em;white-space:nowrap}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;flex-shrink:0;background:none;border:0;cursor:pointer;
+  border-bottom:2px solid transparent;padding:8px 14px 9px;
+  color:var(--dim);font-family:var(--mono);text-align:left;
+  transition:color .18s,border-color .18s,background .18s;
+  border-radius:4px 4px 0 0;
+}
+.tab:hover{color:var(--ink);background:#191920}
+.tab.on{color:var(--ink);border-bottom-color:var(--c);background:#1a1a22}
+.tab .num{
+  display:block;font-family:var(--display);font-size:9.5px;font-weight:800;
+  letter-spacing:.18em;color:var(--c);
+}
+.tab .nm{display:block;font-size:12px;font-weight:500;margin-top:2px;white-space:nowrap}
+.tab .ln{display:block;font-size:9px;color:var(--dimmer);margin-top:3px;letter-spacing:.04em;white-space:nowrap}
+.tab.on .ln{color:var(--dim)}
+
+/* ---------- 主區 ---------- */
+main{display:flex;flex-direction:column;min-width:0;overflow:hidden;flex:1;min-height:0}
+.masthead{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
+  padding:20px 28px 16px;border-bottom:1px solid var(--line);
+}
+.masthead .eyebrow{font-size:9.5px;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;font-weight:500}
+.masthead h1{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.01em;margin-top:6px;line-height:1.1}
+.masthead h1 em{font-style:normal;color:var(--accent)}
+.masthead .tools{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.tbtn{
+  background:#16161c;border:1px solid var(--line);color:var(--dim);
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  padding:7px 12px;border-radius:4px;cursor:pointer;transition:.16s;
+}
+.tbtn:hover{color:var(--ink);border-color:#3a3a46;background:#1c1c24}
+.tbtn.lang{color:var(--accent);border-color:var(--accent)30}
+.tbtn.keys{color:var(--dimmer);cursor:default}
+
+/* ---------- 舞台 ---------- */
+.stagewrap{flex:1;display:grid;grid-template-columns:1fr 372px;min-height:0}
+.viewport{
+  position:relative;background:#000;border-right:1px solid var(--line);
+  min-width:0; min-height:0;
+}
+.viewport iframe{width:100%;height:100%;border:0;display:block;background:#000}
+.viewport .cover{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);color:var(--dimmer);font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;transition:opacity .3s;
+}
+.viewport .cover.hide{opacity:0;pointer-events:none}
+.viewport .cover.tip{pointer-events:none;opacity:.96}
+
+/* ---------- 策展標籤 ---------- */
+.notes{padding:26px 28px;overflow-y:auto;background:var(--panel)}
+.notes .idx{font-family:var(--display);font-size:10.5px;font-weight:800;letter-spacing:.26em;color:var(--accent)}
+.notes h2{font-family:var(--display);font-size:25px;font-weight:800;letter-spacing:-.01em;margin-top:8px;line-height:1.15}
+.notes .zhname{font-family:var(--serif);font-size:14px;color:var(--dim);margin-top:5px;font-style:italic}
+.notes .lede{font-family:var(--serif);font-size:15px;line-height:1.75;color:#c8c5be;margin-top:18px}
+
+.block{margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+.block .h{font-size:9.5px;letter-spacing:.24em;color:var(--dimmer);text-transform:uppercase;margin-bottom:10px}
+.block ul{list-style:none}
+.block li{
+  font-size:12.5px;line-height:1.7;color:#b3b0a9;padding-left:16px;position:relative;margin-bottom:5px;
+}
+.block li::before{content:"—";position:absolute;left:0;color:var(--accent)}
+.block p{font-family:var(--serif);font-size:13.5px;line-height:1.8;color:#b3b0a9}
+.block p.lesson{color:var(--accent)}
+.gap{color:#c9a0a0}
+.gap b{color:#e08a8a;font-weight:600}
+
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.metric{background:#111133;padding:12px 14px}
+.metric .v{font-family:var(--display);font-size:21px;font-weight:800;color:var(--ink);line-height:1}
+.metric .l{font-size:9px;letter-spacing:.16em;color:var(--dimmer);text-transform:uppercase;margin-top:5px}
+.metric.accent .v{color:var(--accent)}
+
+/* ---------- 成長曲線 ---------- */
+.growth{
+  border-top:1px solid var(--line);background:var(--bg2);
+  padding:14px 28px 16px;display:flex;align-items:center;gap:26px;flex-shrink:0;
+}
+.growth .cap{font-size:9.5px;letter-spacing:.24em;color:var(--dimmer);text-transform:uppercase;flex-shrink:0;line-height:1.7}
+.growth .cap b{display:block;color:var(--dim);letter-spacing:.06em;text-transform:none;font-size:10px;font-weight:400;margin-top:3px}
+.bars{flex:1;display:flex;gap:10px;align-items:flex-end;height:56px;min-width:0}
+.bar-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0}
+.bar-col .n{font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-col .b{height:0;background:var(--c);border-radius:2px 2px 0 0;transition:height 1.1s cubic-bezier(.2,.9,.3,1);position:relative}
+.bar-col .b::after{content:attr(data-v);position:absolute;top:-13px;left:0;font-size:9px;color:var(--c);white-space:nowrap}
+.bar-col .l{font-size:9px;color:var(--dimmer);margin-top:5px;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- 響應式 ---------- */
+@media(max-width:1180px){
+  .stagewrap{grid-template-columns:1fr}
+  .notes{border-top:1px solid var(--line);max-height:44vh}
+  .viewport{border-right:0;border-bottom:1px solid var(--line)}
+}
+@media(max-width:860px){
+  .topbar{flex-direction:column;align-items:stretch;gap:10px;padding:10px 18px}
+  .tabs{padding-bottom:4px}
+  .tab{padding:7px 11px 8px}
+  .tab .ln{display:none}
+  .masthead{padding:16px 18px 12px}
+  .masthead h1{font-size:19px}
+  .notes{padding:20px 18px}
+  .growth{display:none}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="kicker" data-i18n="brandKicker">Development Demo</span>
+      <span class="mark">THE ACADEMIC TRIAL</span>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+
+  <main>
+    <div class="masthead">
+      <div>
+        <div class="eyebrow" id="eyebrow">Stage 01</div>
+        <h1 id="headline">—</h1>
+      </div>
+      <div class="tools">
+        <button class="tbtn keys" id="btnKeys" type="button">1–4 / 0 / F</button>
+        <button class="tbtn lang" id="btnLang">EN</button>
+        <label class="tbtn" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:7px 10px;">
+          <input type="checkbox" id="demoSkipToggle" style="width:14px;height:14px;accent-color:var(--accent);">
+          <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);">演示模式</span>
+        </label>
+        <button class="tbtn" id="btnFull" data-i18n="btnFull">全螢幕</button>
+      </div>
+    </div>
+
+    <div class="stagewrap">
+      <div class="viewport">
+        <iframe id="frame" title="stage" allow="autoplay"></iframe>
+        <div class="cover" id="cover">loading</div>
+      </div>
+      <aside class="notes" id="notes"></aside>
+    </div>
+
+    <div class="growth">
+      <div class="cap"><span data-i18n="growthCap">規模</span><b id="growthSub">各階段資料夾規模</b></div>
+      <div class="bars" id="bars"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+/* =======================================================================
+   內容資料
+   每個階段的程式碼行數、檔案數、資產量都是實際量測出來的，不是估計值。
+   ======================================================================= */
+const STAGES = [
+  {
+    id:'s1', num:'01', color:'var(--s1)',
+    en:{ name:'Core Loop', zh:'核心玩法', head:'A game is a loop, not a pile of features.',
+      lede:'Three shapes, one rule, thirty seconds. Nothing else is on screen — not even a word.',
+      added:['A blue dot that follows your cursor','Three red dots that spawn at the edges and chase in straight lines','Collision detection and a 30-second countdown bar','A full-screen red flash when you get caught'],
+      why:'Before you add art, audio or story, prove the loop is alive. Two shapes must already be worth playing, or no amount of production will save the design.',
+      lesson:'From this version a learner takes away exactly one thing: how to stay alive. They never find out what the red dots stand for — and that is the whole point of the design.',
+      absent:'Every word, image, sound, story, score and explanation is deliberately missing.' },
+    zh:{ name:'核心玩法', zh:'Core Loop', head:'一個遊戲是一個迴圈，不是一堆功能。',
+      lede:'三個形狀、一條規則、三十秒。畫面上什麼都沒有 —— 連一個字都沒有。',
+      added:['藍色圓點跟隨游標移動','三顆紅點從邊界生成，沿直線追擊','碰撞判定 + 30 秒倒數橫條','被追到時整片泛紅'],
+      why:'在加美術、音效或劇情之前，先證明迴圈是活的。如果兩個形狀都不值得玩，再多製作都救不了這個設計。',
+      lesson:'從這個版本，學習者只會帶走一件事：怎麼活下來。他們永遠不會知道紅點代表什麼 —— 這正是設計目的。',
+      absent:'所有文字、圖片、音效、劇情、分數與解釋，都是刻意拿掉的。' },
+    lines:187, files:1, assets:'0', weights:'0 bytes',
+  },
+  {
+    id:'s2', num:'02', color:'var(--s2)',
+    en:{ name:'Game Feel', zh:'遊戲手感', head:'More stakes. Different feeling.',
+      lede:'The chase itself is unchanged. What arrived with the polish is the consequence: a bar you can lose, damage that differs, and sources worth running for.',
+      added:['11 real sprites, including a two-frame walk cycle at 10 fps','Particle bursts, screen shake, and hit-stop (the single biggest win)','Red damage numbers, movement afterimages, invincibility blink','A losing condition: four enemy types with different speed and damage','Collectibles, score, and a life bar that empties','A threat ring per enemy — colour means danger, not identity','Sound effects synthesised live in WebAudio — zero audio files'],
+      why:'Feedback is the difference between a working program and a game. This stage exists to isolate it, so the audience can feel exactly what it buys.',
+      lesson:'The four enemies differ in speed and damage, and the ring around each one tells you how much punishment it costs — but never what it is. Severity is a mechanic; identity is the next stage.',
+      absent:'Still no story, no roles, no skills, no tooltips, no teaching text. The life bar is deliberately not called INTEGRITY: that word belongs to Stage 3.' },
+    zh:{ name:'遊戲手感', zh:'Game Feel', head:'多了輸贏，感覺不同。',
+      lede:'追逐本身沒變。跟著手感一起來的是「後果」：一條會輸的條、不同的傷害值，以及值得去撿的來源。',
+      added:['11 張真實 sprite，含 10fps 兩幀走路循環','粒子爆發、震屏、受擊定格（影響最大的一項）','紅色傷害數字、移動殘影、無敵閃爍','新增失敗條件：四種敵人，速度與傷害各不相同','收集物、分數，以及會歸零的生命條','每個敵人帶一圈威脅環 —— 顏色代表危險度，不代表身分','WebAudio 即時合成音效 —— 零音檔'],
+      why:'回饋是「能跑的程式」和「一個遊戲」之間的距離。這個階段專門把它 isolation 出來，讓觀眾親身體會它買到了什麼。',
+      lesson:'四種敵人的速度與傷害都不同，敵人身邊那一圈顏色告訴你它有多痛 —— 但不告訴你那 是什麼。嚴重度是機制；身分留給下一個階段。',
+      absent:'仍然沒有劇情、角色、技能、tooltip、教學文字。生命條刻意不叫 INTEGRITY：那個詞屬於 Stage 3。' },
+    lines:377, files:12, assets:'11 images', weights:'3.1 MB',
+  },
+  {
+    id:'s3', num:'03', color:'var(--s3)',
+    en:{ name:'Meaning', zh:'意義', head:'Now the chase is about something.',
+      lede:'The loop is untouched. What changed is that everything in it now points at a real-world behaviour.',
+      added:['Click-through cutscenes and a title screen','Four assignments, four backgrounds, and a procedural score per level','Enemies given real names — and, more importantly, real behaviours','A permanent name tag over every enemy, so the label is never guesswork','A live essay panel that fills as you play','A plain level-clear card with no grade on it'],
+      why:'A game needs an object. Here the four enemies stop being shapes and become four specific violations a university student actually has to face.',
+      lesson:'This is the core of the design. Each enemy’s movement is a physical metaphor for the violation it represents: PLAGIARISM chases you, AI BLOB inflates if ignored, ESSAY MILL shoots from range, FAKE SOURCE wears a disguise. You get the name free — what you do with it is the next stage. A disguised FAKE SOURCE shows no name, because the disguise is the whole mechanic.',
+      absent:'Deliberately withheld for the next stage: any choice the player gets to make. No roles, no skill cards, no skill effects, no grade formula, no grades or feedback comments, no result screen, no reflection questions, no CSV export.' },
+    zh:{ name:'意義', zh:'Meaning', head:'這場追逐，終於在指涉某件事。',
+      lede:'迴圈本身完全沒動。改變的是：裡面每一個東西都開始指向一個真實世界行為。',
+      added:['可點擊的過場動畫與標題畫面','四份作業、四張背景、每關程序化生成的配樂','敵人有了正式名字 —— 更重要的是，有了正式行為','每隻敵人頭上都有常駐名牌，名字不用靠猜','隨遊戲即時填寫的論文面板','一張刻意不顯示等第的過場卡'],
+      why:'遊戲需要一個對象。在這裡，四種敵人不再只是形狀，而成為大學生真正要面對的四種違規行為。',
+      lesson:'這是整個設計的核心。每個敵人的移動方式都是它所代表違規行為的物理隱喻：PLAGIARISM 直接追你、AI BLOB 不理它就膨脹、ESSAY MILL 遠程射擊、FAKE SOURCE 偽裝成來源。這個階段把名字直接交給你；拿名字怎麼做，是下一個階段的事。偽裝中的 FAKE SOURCE 不顯示名牌 —— 因為偽裝本身就是機制。',
+      absent:'刻意留給下一階段：任何「讓玩家做選擇」的東西。沒有角色、沒有技能卡、沒有技能效果、沒有評分公式、沒有等第與評語、沒有結算畫面、沒有反思問題、沒有 CSV 匯出。' },
+    lines:1133, files:7, assets:'27 images', weights:'22.0 MB',
+  },
+  {
+    id:'s4', num:'04', color:'var(--s4)',
+    en:{ name:'Learning', zh:'學習', head:'Every layer above becomes a channel for teaching.',
+      lede:'This is academic-trial-V21, the shipped game. Not one line of its logic has been altered.',
+      added:['Hover tooltips: what happened, why it is wrong, what it costs you','Four skill cards, each with a real gameplay effect you can feel','A grade formula combining integrity and sources','Result screen, grade history, reflection questions','CSV export, LMS login, and Google Analytics'],
+      why:'Skills exist to make players want to read. The card is the reward, the gameplay advantage is the hook, the learning is what the player came for.',
+      lesson:'This closes the loop. Level 1 of the real game is a deliberate re-enactment of Stage 1 — arriving unprepared, knowing nothing, being overwhelmed. The student starts exactly where the design demo did.',
+      absent:'Nothing is withheld here. This is the final artefact. One deviation from V21: the login fields arrive pre-filled so a class can get in with one click. The real login, its validation and the CSV record are unchanged.' },
+    zh:{ name:'學習', zh:'Learning', head:'上面每一層，都變成了教學的通道。',
+      lede:'這就是 academic-trial-V21 正式版。它的邏輯一行都沒有改動。',
+      added:['hover tooltip：發生了什麼、為什麼是錯的、後果是什麼','四張技能卡，每張都有可感知的實際遊戲效果','結合誠信值與來源的評分公式','結算畫面、成績歷程、反思問題','CSV 匯出、LMS 登入與 Google Analytics'],
+      why:'技能的存在是為了讓玩家「想讀字」。卡片是獎賞，遊戲優勢是誘因，學習才是玩家真正想要的東西。',
+      lesson:'這裡形成閉環。正式版的 Level 1 是一次刻意重演的 Stage 1 —— 準備不足、什麼都不知道、被壓倒。學習者的起點，和這個設計示範的起點完全一樣。',
+      absent:'這裡不再保留任何東西。這是最終成品。與 V21 唯一的差異：登入欄位已預填示範值，讓課堂能一鍵進入。原本的登入流程、驗證與 CSV 記錄完全沒動。' },
+    lines:3762, files:6, assets:'27 images', weights:'22.2 MB',
+  },
+];
+// ★ 快取版本號：每個前端的 js/css 一改就要同步更新這裡（AGENTS.md 規定）。
+//   版本格式 {YYYYMMDD}{序號}，同日每次改動遞增。
+const BUILD = '20260930a';
+const PATH = {
+  s1:'stages/01-core-loop/index.html',
+  s2:'stages/02-game-feel/index.html',
+  s3:'stages/03-meaning/index.html',
+  s4:'stages/04-learning/index.html',
+};
+// 給 iframe 加上版本參數，避免改了 stage 卻仍載入瀏覽器快取裡的舊 index.html
+const bust = p => p + '?v=' + BUILD;
+
+let lang = 'zh-Hant';
+let current = 's1';
+let loadedSrc = null;
+
+/* ---------------- 渲染 ---------------- */
+const $ = id => document.getElementById(id);
+const t = s => lang === 'zh-Hant' ? s.zh : s.en;
+
+function renderTabs(){
+  $('tabs').innerHTML = STAGES.map(s => `
+    <button class="tab ${s.id===current?'on':''}" style="--c:${s.color}" data-id="${s.id}">
+      <span class="num">${s.num}</span>
+      <span class="nm">${t(s).name}</span>
+      <span class="ln">${s.lines.toLocaleString()} ${lang==='zh-Hant'?'行':'lines'}</span>
+    </button>`).join('');
+  document.querySelectorAll('.tab').forEach(b =>
+    b.onclick = () => select(b.dataset.id));
+}
+
+function renderNotes(s){
+  const d = t(s);
+  $('eyebrow').textContent = `Stage ${s.num} / 04`;
+  $('headline').innerHTML = lang==='zh-Hant'
+    ? esc(d.head) : esc(d.head);
+
+  const absentLabel = lang==='zh-Hant' ? '刻意沒有' : 'Deliberately absent';
+  const addedLabel  = lang==='zh-Hant' ? '這一階段新增了什麼' : 'What this stage adds';
+  const whyLabel    = lang==='zh-Hant' ? '為什麼要加' : 'Why';
+  const lessonLabel = lang==='zh-Hant' ? '教學意義' : 'The teaching point';
+  const statsLabel  = lang==='zh-Hant' ? '規模' : 'Size';
+  const startLabel  = lang==='zh-Hant' ? '開始' : 'Start';
+
+  const m = [
+    [s.lines.toLocaleString(), lang==='zh-Hant'?'行（含素材）':'lines incl. assets'],
+    [s.files, lang==='zh-Hant'?'個檔案':'files'],
+    [s.assets, lang==='zh-Hant'?'美術資產':'art assets'],
+    [s.weights, lang==='zh-Hant'?'素材體積':'asset weight'],
+  ];
+
+  $('notes').innerHTML = `
+    <div class="idx">STAGE ${s.num}</div>
+    <h2>${esc(d.name)}</h2>
+    <div class="zhname">${esc(d.zh)}</div>
+    <p class="lede">${esc(d.lede)}</p>
+
+    <div class="block">
+      <div class="h">${addedLabel}</div>
+      <ul>${d.added.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    </div>
+
+    <div class="block">
+      <div class="h">${whyLabel}</div>
+      <p>${esc(d.why)}</p>
+    </div>
+
+    <div class="block">
+      <div class="h">${lessonLabel}</div>
+      <p class="lesson">${esc(d.lesson)}</p>
+    </div>
+
+    <div class="block gap">
+      <div class="h">${absentLabel}</div>
+      <p>${esc(d.absent)}</p>
+    </div>
+
+    <div class="block">
+      <div class="h">${statsLabel}</div>
+      <div class="metrics">
+        ${m.map(([v,l],i)=>`<div class="metric ${i===0?'accent':''}"><div class="v">${esc(String(v))}</div><div class="l">${esc(l)}</div></div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderBars(){
+  const data = STAGES.map(s=>({n:s.num, l:s.lines, c:s.color, lb: lang==='zh-Hant'?'本示範重建':'reconstruction'}));
+  const max = Math.max(...data.map(d=>d.l));
+  $('bars').innerHTML = data.map(d=>`
+    <div class="bar-col" style="--c:${d.c}">
+      <div class="n">${d.l.toLocaleString()}</div>
+      <div class="b" data-h="${(d.l/max*100).toFixed(1)}" data-v="${d.l.toLocaleString()}"></div>
+      <div class="l">${d.n} · ${d.lb}</div>
+    </div>`).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('.bar-col .b').forEach(b=> b.style.height = b.dataset.h + '%');
+  }));
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------------- 舞台載入 ---------------- */
+function show(src){
+  $('cover').classList.remove('hide');
+  $('cover').textContent = 'loading';
+  const f = $('frame');
+  if (src === loadedSrc) { $('cover').classList.add('hide'); return; }
+  loadedSrc = src;
+  f.onload = () => setTimeout(() => $('cover').classList.add('hide'), 120);
+  const skip = $('demoSkipToggle').checked ? '&skip=1' : '';
+  f.src = bust(src) + skip;
+}
+
+function select(id){
+  current = id;
+  const s = STAGES.find(x=>x.id===id);
+  document.documentElement.style.setProperty('--accent', s.color);
+  renderTabs(); renderNotes(s); renderBars();
+  show(PATH[s.id]);
+}
+
+function applyLang(){
+  $('btnLang').textContent = lang === 'zh-Hant' ? 'EN' : '中文';
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k = el.dataset.i18n;
+    const m = { brandKicker:['Development Demo','開發演示'],
+      btnFull:['Fullscreen','全螢幕'],
+      growthCap:['Scale','規模'] };
+    if (m[k]) el.textContent = lang === 'zh-Hant' ? m[k][1] : m[k][0];
+  });
+  $('growthSub').textContent = lang==='zh-Hant' ? '各階段資料夾規模 · 含素材' : 'Project size per stage · assets included';
+  select(current);
+}
+
+// 只切換語言後重新套用。init() 必須呼叫 applyLang() 而不是這個函式，
+// 否則頁面一載入就會把預設語言翻掉。
+function toggleLang(){
+  lang = lang === 'zh-Hant' ? 'en' : 'zh-Hant';
+  applyLang();
+}
+
+$('btnLang').onclick = toggleLang;
+
+function applyDemoSkip(){
+  const f = $('frame');
+  if (!f) return;
+  const base = f.src.split('?')[0].split('&')[0];
+  const skip = $('demoSkipToggle').checked ? '&skip=1' : '';
+  f.src = base + '?v=' + BUILD + skip;
+  try { localStorage.setItem('academic_demo_skip', $('demoSkipToggle').checked ? '1' : '0'); } catch (e) {}
+}
+$('demoSkipToggle').addEventListener('change', applyDemoSkip);
+
+$('btnFull').onclick = () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen();
+};
+window.addEventListener('keydown', e => {
+  if (e.key >= '1' && e.key <= '4') select('s'+e.key);
+  if (e.key === 'f' || e.key === 'F') $('btnFull').click();
+    // 舞台是放在 iframe 裡的，而 iframe 必須先取得焦點才收得到鍵盤事件。
+    // 觀眾常常在還沒點進遊戲前就按空白鍵，結果什麼都沒發生、以為是當機。
+    // 這裡把空白鍵／Enter 轉送進 iframe，不必先點。
+    //
+    // ★ 但用 file:// 直接開啟 HTML 時，瀏覽器會把每個檔案視為不同來源
+    //   （origin 為 null），父頁面碰不到 iframe 的 contentWindow，
+    //   dispatchEvent 會丟 SecurityError。捕捉它並提示點一下遊戲區，
+    //   避免觀眾按了鍵卻看到紅色錯誤訊息。
+    if (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
+      const f = $('frame'), w = f && f.contentWindow;
+      if (!w) return;
+      try {
+        w.dispatchEvent(new KeyboardEvent('keydown', { key: e.key, bubbles: true }));
+      } catch (err) {
+        if (f.dataset.tipShown) return;
+        f.dataset.tipShown = '1';
+        const c = $('cover');
+        c.textContent = '點一下遊戲區，空白鍵／Enter 才會生效';
+        c.classList.remove('hide');
+        c.classList.add('tip');           // 不阻擋點擊
+        setTimeout(() => { c.classList.add('hide'); c.classList.remove('tip'); }, 2600);
+      }
+    }
+  });
+
+
+applyLang();   // 載入時套用預設語言（繁體中文），不做切換
+</script>
+</body>
+</html>
