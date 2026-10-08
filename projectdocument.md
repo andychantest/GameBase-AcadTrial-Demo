@@ -2,7 +2,7 @@
 
 **專案名稱**：Demo Game（The Academic Trial 開發演示）
 **建立日期**：2026-09-28
-**版本**：v0.6
+**版本**：v0.10
 **位置**：`C:\Dropbox\Opencode\Academic Trial GProject\Demo Game\`
 
 ---
@@ -80,11 +80,11 @@ Demo Game/
 │       ├── images/               27 張（22.2 MB）
 │       ├── audio/{music,sfx}/    空資料夾 + README.txt
 │       └── shake-preview.html
-└── backups/
-    └── demogame-v0.4_20260929/   本版完整備份 + VERSION_NOTES.txt
 ```
 
 總計 85 個檔案、約 47.5 MB。
+
+> **備份目錄**：`backups/` 於 v0.9 依使用者指示整包刪除；日後未經要求不建立專案內備份。
 
 > **v0.4 移除 `history/`**：原第 5 個分頁「真實開發史」提供 v05／v10／v17 三個
 > 早期版本讓觀眾載入遊玩，等於把舊程式碼攤給觀眾看，且佔專案 43% 體積（60 檔／36.21 MB，
@@ -135,6 +135,10 @@ Demo Game/
 > 生命條刻意命名為 `LIFE` 而非 `INTEGRITY`，圖例只用 LOW/MED/HIGH 嚴重度字眼，
 > 不寫敵人名稱。嚴重度屬於機制層；身分屬於 Stage 3。
 > （內部變數 `integrity` 保留原名，但它從不顯示給玩家。）
+
+> **結算面板（v0.10 加入）**：遊戲結束時畫出 canvas 結算面板（非 DOM）——
+> 敗北 `GAME OVER`＋`YOUR ACADEMIC STANDING HAS COLLAPSED`（中性措辭，維持語彙隔離），
+> 勝利 `STAGE CLEARED`；皆含分數與 `— Click to retry —`，點擊畫布重來。
 
 ### 3.4 Stage 3 — Meaning
 
@@ -211,18 +215,20 @@ Demo Game/
 
 ### 3.5 Stage 4 — Learning
 
-原始 `academic-trial-V21` 的完整副本。**`game.js` 一行邏輯都沒有改動。**
-
-相對 V21 共有**兩處**刻意偏差，僅存在於本副本：
+原始 `academic-trial-V21` 的完整副本。相對於純 V21，本副本做了**實作層的必要調整**
+（均為示範／效能所需，見下方清單與修版紀錄），領域邏輯（評分、技能、敵人行為、CSV、
+登入驗證）一行未動：
 
 | # | 偏差 | 位置 | 理由 |
 |---|---|---|---|
 | 1 | 移除 Google Analytics 的 `<script>` 區塊 | `index.html`、`shake-preview.html` | 示範環境不應把資料送到外部服務。`game.js` 內的 `gtag()` 呼叫保留，因其位於 `try/catch` 內 |
 | 2 | 登入欄位預填 `Demo Student` / `demo@student.university.edu`，並加一行說明提示 | `index.html` | V21 開機後直接進 LOGIN 閘門（`game.js:173`），強制填 Name + Email 才能 `showRoleSelect()`，留空會跳 `alert()`。課堂展示時這是阻礙 |
+| 3 | `asset-loader.js`：移除 `crossOrigin`（`file://` 下）、失敗不快取 `null`、`preloadAll` 只載真實存在的檔案；`?t=Date.now()` 改為穩定 `?v=<BUILD>`（修快取） | `asset-loader.js` | 見 v0.8／v0.10 修版紀錄。V21 原 loader 會逐幀試探多個不存在的檔名 |
+| 4 | `game.js`：demo／debug 跳關拆成獨立按鈕、新增 `restartGame()`，並將過場圖改為背景續載 | `game.js` | 見 v0.9／v0.10 修版紀錄。不影響領域邏輯 |
 
-偏差 2 的影響範圍經驗證為零：`game.js` 未動，登入驗證（清空欄位仍會跳 `alert('Please enter both name and email.')` 並停在 `screen-login`）、`record` 記錄與 CSV 匯出全部照常運作。使用者仍可自行修改或清空欄位。
+偏差 2 的影響範圍經驗證為零：登入驗證（清空欄位仍會跳 `alert('Please enter both name and email.')` 並停在 `screen-login`）、`record` 記錄與 CSV 匯出全部照常運作。使用者仍可自行修改或清空欄位。
 
-**已知現象（刻意保留）**：V21 原始 `asset-loader.js` 會平行嘗試所有候選路徑，因此載入時會產生 39 個 404 請求。這是原版行為，為了讓 Stage 4 保持逐行忠實而**不予修正**，並可作為「原始碼 vs 清理後示範碼」的對照教材（Stage 3 的 loader 為逐一套試、0 個 404）。
+**已知現象（已於 v0.8 處理）**：V21 原始 `asset-loader.js` 會平行嘗試所有候選路徑並對不存在檔名逐幀試探，因而產生大量 404。v0.8 起本副本的 loader 改為只載入真實存在的檔案（玩家 3、敵／道具各 1 幀、背景 4、過場 10），404 噪音已歸零，`preloadAll` 日誌顯示各類 Count/總數齊全。
 
 ### 3.6 真實開發史（v0.4 已移除）
 
@@ -293,10 +299,11 @@ Stage 4 另有 DEBUG / ANIMATION / SKILL_1..4 / GRADING / IMAGES
 
 | 位置 | 版本號 | 說明 |
 |---|---|---|
-| `stages/03-meaning/index.html` | `?v=20260929c` | style.css / config.js / config-parser.js / asset-loader.js / audio.js / game.js |
-| `stages/04-learning/index.html` | `?v=20260929c` | style.css / config.js / config-parser.js / asset-loader.js / game.js |
+| `stages/03-meaning/index.html` | `?v=20260930a` | style.css / config.js / config-parser.js / asset-loader.js / audio.js / game.js |
+| `stages/04-learning/index.html` | `?v=20260930b` | style.css / config.js / config-parser.js / asset-loader.js / game.js |
 | （v0.5 起無需） | — | 設定改由 `config.js` 的 `<script src>` 載入，不再 `fetch`，故無獨立快取參數 |
-| 切換器 `index.html` | `BUILD = '20260929c'` | `bust()` 為 iframe src 附加版本號，避免載入舊的 stage index.html |
+| 切換器 `index.html` | `BUILD = '20260930b'` | `bust()` 為 iframe src 附加版本號，避免載入舊的 stage index.html |
+| Stage 4 圖片載入 | `?v=(window.APP_BUILD)` | `asset-loader.js` 以 `window.APP_BUILD`（在 `04-learning/index.html` inline script 定義）當圖片快取參數；`file://` 不加參數 |
 
 **維護規則**：同日再次改動任一前端檔案時，序號遞增（`20260929b`、`20260929c`…），
 且四處（上表）必須同步更新。
@@ -305,15 +312,8 @@ Stage 4 另有 DEBUG / ANIMATION / SKILL_1..4 / GRADING / IMAGES
 
 ## 5. 已知限制
 
-1. **需要本機伺服器**：Stage 3／4／history 無法以 `file://` 開啟
-2. **Stage 4 產生 404 噪音**：原始 V21 資產載入器行為，刻意未修。**完整玩到競技場共 41 個**
-   （只在登入畫面載入時是 39 個，進競技場後多 2 個學生動畫幀）：
-   - 1 × `backgrounds/bg_title.png`
-   - 2 × `characters/player_admin.png`、`player_teacher.png`（已停用角色）
-   - 2 × `characters/player_student_idle_2.png`、`player_student_move_3.png`（**僅進競技場才請求**）
-   - 16 × `collectibles/collectible_{book,data,expert,journal}_{2..5}.png`
-   - 4 × `cutscenes/story_{gameover,level2_pre,level3_pre,level3_post}.png`
-   - 16 × `enemies/enemy_{aiblob,essaymill,fakesource,plagiarism}_{2..5}.png`
+1. **~~需要本機伺服器~~（v0.5 已解除）**：四階段皆可直接以 `file://` 開啟（設定改由 `<script src="config.js">` 載入）
+2. **~~Stage 4 產生 41 個 404 噪音~~（v0.8 已清除）**：`asset-loader.js` 改為只載真實存在的檔案（玩家 3、敵／道具各 1 幀、背景 4、過場 10），不再逐幀試探不存在的檔名
 3. **~~history 的 v05 有 99 個 404~~（v0.4 已移除，history/ 整包刪除）**
 4. **Stage 3 的 COLLUDE（mirror）預設停用**：程式碼已實作，但 `config.js` 中 `enabled: false`，未列入啟用關卡
 5. **角色外觀未區分**：Stage 4 的單一 STUDENT 角色沿用 V21 的玩家 sprite（`playerRole` 僅影響速度與 sprite 路徑前綴）
@@ -323,6 +323,19 @@ Stage 4 另有 DEBUG / ANIMATION / SKILL_1..4 / GRADING / IMAGES
 ---
 
 ## 6. 修版紀錄
+
+### v0.9 → v0.10（2026-09-30）
+
+切換器改稱 Version、Stage 2 補結算面板、Stage 4 載入提速。
+
+| # | 問題 | 根因 | 修法 |
+|---|---|---|---|
+| 1 | 4 個 demo 都以「Stage 01–04」標示，與遊戲內「Level 1–4」的關卡編號混淆 | 切換器頁籤與眉標用 `Stage`／`01–04` 字眼 | 頁籤改 `V1`–`V4`、眉標改 `Version 1 / 4`（`parseInt(s.num)` 顯示）；各關卡內部的設計論述與 `<title>` 保留不動 |
+| 2 | Stage 2 結束只有白／紅閃爍，沒有結算 | `finish(win)` 只設 `outcome`、點擊直接重來 | 新增 canvas 結算面板 `drawResultPanel()`：敗北 `GAME OVER`＋`YOUR ACADEMIC STANDING HAS COLLAPSED`（中性措辭，維持「不揭露誠信詞彙」設計約束）、勝利 `STAGE CLEARED`；皆含分數與 `— Click to retry —` |
+| 3 | Stage 4 載入慢（首屏等很久） | 根因 A：`preloadAll()` 把 28 張圖（含 10 張約 14MB 的過場）全部擋在登入畫面前；根因 B：圖片 cache buster 用 `?t=Date.now()`，網路環境下每次開啟都全量重下載 22MB、永遠快取不到 | A：`preloadAll()` 只擋進場必要資產（背景 4＋角色 3＋收集物 4＋敵人 4，約 8.6MB），過場圖改由新方法 `preloadCutscenes()` 在登入顯示後背景續載（`intro_1` 優先入隊；`playCutscene()` 對未載好的圖會自動略過）。B：改為穩定 `?v=<window.APP_BUILD>`，配合 BUILD 升版才刷新快取；`file://` 維持純路徑 |
+| 4 | 版本號同步 | AGENTS.md 強制 `?v=` 同步 | 切換器 BUILD 與 Stage 4 四組 `?v=` → `20260930b`；`window.APP_BUILD` 定義於 `04-learning/index.html` inline script |
+
+**實測（Playwright，v0.10）**：見驗證段——切換器顯示 `V1..V4`／`Version 1 / 4`；Stage 2 點 demo 跳關鈕出現 `STAGE CLEARED` 面板；Stage 4 圖片請求改為 `?v=`（非 `?t=`）、進入登入畫面時間縮短、過場於背景續載；四階段 `file://` 無參數回歸 0 例外。
 
 ### v0.3 → v0.4（2026-09-29）
 

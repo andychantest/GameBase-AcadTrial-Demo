@@ -166,13 +166,16 @@ const Game = {
     // Clear image cache for fresh load
     AssetLoader.clearCache();
     
-    UI.setLoadingText('Loading cutscenes...');
+    UI.setLoadingText('Loading assets...');
     await AssetLoader.preloadAll(this.cfg, (phrase, loaded, total) => {
       UI.setLoadingText(`${phrase} (${loaded}/${total})...`);
     });
     UI.showScreen('login');
     this.state = 'login';
     this._phaseStartTime = Date.now();
+
+    // 非阻塞背景載入：過場圖（約 14MB）不擋進場，登入後續載。
+    AssetLoader.preloadCutscenes();
   },
 
   resize() {

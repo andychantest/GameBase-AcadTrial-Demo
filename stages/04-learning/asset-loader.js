@@ -70,8 +70,11 @@ const AssetLoader = {
         }
       };
       
-      // Skip cache buster for file:// protocol (breaks local file loading)
-      img.src = isFileProtocol ? path : (path + '?t=' + Date.now());
+      // 穩定版本參數取代 ?t=Date.now()：後者會讓每次載入都把全部圖片重新下載、
+      // 永遠快取不到（網路環境下每開一次 22MB）。BUMP 版本號時才刷新快取。
+      // file:// 下維持純路徑（加參數會破壞本機載入）。
+      const v = (typeof window !== 'undefined' && window.APP_BUILD) || '20260930b';
+      img.src = isFileProtocol ? path : (path + '?v=' + v);
       
       // Timeout
       setTimeout(() => {
@@ -314,15 +317,8 @@ const AssetLoader = {
   // ── PRELOAD ALL KNOWN ASSETS ─────────────────────────────────
 
   async preloadAll(cfg, onProgress) {
-    // Only load cutscenes that actually exist in V21
-    const cutsceneNames = [
-      'intro_1','intro_2','intro_3','intro_4',
-      'level1_pre','level1_post',
-      'level2_post',
-      'level4_pre','level4_post',
-      'graduation'
-    ];
-    const cutscenePaths = cutsceneNames.map(n => `images/cutscenes/story_${n}.png`);
+    // 過場圖（約 14MB）只會在較晚的流程用到，改由 preloadCutscenes() 在背景續載。
+    // 這裡只擋「進場必要」的資產，縮短首屏等待時間。
 
     // Backgrounds: only the 4 used in config (no bg_title)
     const bgNames = ['library','computer_lab','lecture','cyberspace'];
@@ -346,42 +342,49 @@ const AssetLoader = {
     const enemyPaths = enemyIds.map(id => `images/enemies/enemy_${id}_1.png`);
     console.log('[AssetLoader] Enemy paths:', enemyPaths);
 
-    console.log('[AssetLoader] Loading cutscenes...');
-    for (let i = 0; i < cutscenePaths.length; i++) {
-      await this.loadImage(cutscenePaths[i], 2);
-      if (onProgress) onProgress('Loading cutscenes', i + 1, cutscenePaths.length);
-      await new Promise(r => setTimeout(r, 50));
+    const groups = [
+      ['Loading backgrounds', bgPaths, 40],
+      ['Loading player animations', playerPaths, 30],
+      ['Loading collectibles', collectiblePaths, 20],
+      ['Loading enemies', enemyPaths, 20],
+    ];
+
+    let done = 0;
+    const total = bgPaths.length + playerPaths.length + collectiblePaths.length + enemyPaths.length;
+    for (const [phrase, paths, delay] of groups) {
+      for (let i = 0; i < paths.length; i++) {
+        await this.loadImage(paths[i], 2);
+        done++;
+        if (onProgress) onProgress(phrase, done, total);
+        await new Promise(r => setTimeout(r, delay));
+      }
     }
 
-    console.log('[AssetLoader] Loading backgrounds...');
-    for (let i = 0; i < bgPaths.length; i++) {
-      await this.loadImage(bgPaths[i], 2);
-      await new Promise(r => setTimeout(r, 30));
-    }
-
-    console.log('[AssetLoader] Loading player animations...');
-    for (let i = 0; i < playerPaths.length; i++) {
-      await this.loadImage(playerPaths[i], 2);
-      await new Promise(r => setTimeout(r, 30));
-    }
-
-    console.log('[AssetLoader] Loading collectibles...');
-    for (let i = 0; i < collectiblePaths.length; i++) {
-      await this.loadImage(collectiblePaths[i], 2);
-      await new Promise(r => setTimeout(r, 20));
-    }
-
-    console.log('[AssetLoader] Loading enemies...');
-    for (let i = 0; i < enemyPaths.length; i++) {
-      await this.loadImage(enemyPaths[i], 2);
-      await new Promise(r => setTimeout(r, 20));
-    }
-
-    const cutsceneCount = cutscenePaths.filter(p => this.isReady(p)).length;
     const bgCount = bgPaths.filter(p => this.isReady(p)).length;
     const collectibleCount = collectiblePaths.filter(p => this.isReady(p)).length;
     const enemyCount = enemyPaths.filter(p => this.isReady(p)).length;
-    console.log(`[AssetLoader] Cutscenes: ${cutsceneCount}/${cutscenePaths.length}, Backgrounds: ${bgCount}/${bgPaths.length}, Collectibles: ${collectibleCount}/${collectiblePaths.length}, Enemies: ${enemyCount}/${enemyPaths.length}, Player: ${playerPaths.filter(p => this.isReady(p)).length}/${playerPaths.length}`);
+    console.log(`[AssetLoader] Critical assets loaded. Backgrounds: ${bgCount}/${bgPaths.length}, Collectibles: ${collectibleCount}/${collectiblePaths.length}, Enemies: ${enemyCount}/${enemyPaths.length}, Player: ${playerPaths.filter(p => this.isReady(p)).length}/${playerPaths.length}`);
+  },
+
+  // ── BACKGROUND CUTSCENE PRELOAD ───────────────────────────────
+  // 過場圖共約 14MB，只在過場與後期關卡用到。進場後於背景續載（fire-and-forget）。
+  // intro_1 排在佇列最前面，優先變成可用；playCutscene() 對未載好的圖會自動略過。
+  async preloadCutscenes() {
+    const cutsceneNames = [
+      'intro_1','intro_2','intro_3','intro_4',
+      'level1_pre','level1_post',
+      'level2_post',
+      'level4_pre','level4_post',
+      'graduation'
+    ];
+    const cutscenePaths = cutsceneNames.map(n => `images/cutscenes/story_${n}.png`);
+    console.log('[AssetLoader] Loading cutscenes in background...');
+    for (let i = 0; i < cutscenePaths.length; i++) {
+      await this.loadImage(cutscenePaths[i], 2);
+      await new Promise(r => setTimeout(r, 50));
+    }
+    const cutsceneCount = cutscenePaths.filter(p => this.isReady(p)).length;
+    console.log(`[AssetLoader] Cutscenes: ${cutsceneCount}/${cutscenePaths.length} (background load complete)`);
   },
 };
 

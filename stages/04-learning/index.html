@@ -8,7 +8,7 @@
        so that presenting the demo does not pollute the real
        Learning Analytics data. The gtag() calls in game.js are
        wrapped in try/catch, so gameplay is unaffected. -->
-  <link rel="stylesheet" href="style.css?v=20260930a">
+  <link rel="stylesheet" href="style.css?v=20260930b">
   <style>
     /* Cutscene screen */
     #screen-cutscene {
@@ -276,11 +276,13 @@
 
 </div>
 
-<script src="config.js?v=20260930a"></script>
-<script src="config-parser.js?v=20260930a"></script>
-<script src="asset-loader.js?v=20260930a"></script>
-<script src="game.js?v=20260930a"></script>
+<script src="config.js?v=20260930b"></script>
+<script src="config-parser.js?v=20260930b"></script>
+<script src="asset-loader.js?v=20260930b"></script>
+<script src="game.js?v=20260930b"></script>
 <script>
+  // 與根切換器 BUILD 同步：asset-loader 以這個值當圖片快取版本參數。
+  window.APP_BUILD = '20260930b';
   const DEMO_SKIP = location.search.includes('skip=1') || (() => { try { return localStorage.getItem('academic_demo_skip') === '1'; } catch (e) { return false; } })();
   const debugSkipBtn = document.getElementById('btn-debug-skip');
   const demoSkipBtn = document.getElementById('btn-demo-skip');
