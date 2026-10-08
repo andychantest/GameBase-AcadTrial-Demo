@@ -271,7 +271,7 @@ function stepParticles(dt) {
   }
 }
 
-function finish(win) { outcome = win ? 'win' : 'lose'; flash = 1; Sfx.end(win); }
+function finish(win) { outcome = win ? 'win' : 'lose'; shake = 0; flash = 1; Sfx.end(win); }
 // ================================================================ 繪製
 function drawSprite(img, x, y, d) {
   if (img && img.complete && img.naturalWidth) ctx.drawImage(img, x - d / 2, y - d / 2, d, d);
@@ -457,10 +457,10 @@ function loop(ts) {
   }
   update(dt);
 
-  // 震屏：整個場景位移，帶衰減
-  const s = shake > 0 ? shake * Math.random() : 0;
+  // 震屏：整個場景位移，帶衰減；結算時不震
+  const s = (shake > 0 && !outcome) ? shake * Math.random() : 0;
   ctx.save();
-  ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+  if (s) ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
   draw();
   ctx.restore();
 }
