@@ -367,7 +367,7 @@ function applyLang(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const k = el.dataset.i18n;
     const m = { brandKicker:['Development Demo','開發演示'],
-      btnFull:['Fullscreen','全螢幕']'規模'] };
+      btnFull:['Fullscreen','全螢幕'] };
     if (m[k]) el.textContent = lang === 'zh-Hant' ? m[k][1] : m[k][0];
   });
   
