@@ -26,7 +26,7 @@
 html,body{height:100%}
 body{
   background:var(--bg); color:var(--ink);
-  font-family:var(--mono); font-size:16px; line-height:1.6;
+  font-family:var(--mono); font-size:20px; line-height:1.6;
   overflow:hidden;
   -webkit-font-smoothing:antialiased;
 }
@@ -47,11 +47,11 @@ body::after{
 .topbar .brand .kicker{font-size:9px;letter-spacing:.28em;color:var(--dimmer);text-transform:uppercase;white-space:nowrap}
 .topbar .brand .mark{font-family:var(--display);font-size:15px;font-weight:800;letter-spacing:.02em;white-space:nowrap}
 
-.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.tabs{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:2px}
 .tabs::-webkit-scrollbar{display:none}
 .tab{
   position:relative;flex-shrink:0;background:none;border:0;cursor:pointer;
-  border-bottom:2px solid transparent;padding:6px 12px 7px;
+  border-bottom:2px solid transparent;padding:10px 16px 11px;
   color:var(--dim);font-family:var(--mono);text-align:left;
   transition:color .18s,border-color .18s,background .18s;
   border-radius:4px 4px 0 0;
@@ -59,10 +59,10 @@ body::after{
 .tab:hover{color:var(--ink);background:#191920}
 .tab.on{color:var(--ink);border-bottom-color:var(--c);background:#1a1a22}
 .tab .num{
-  display:inline;font-family:var(--display);font-size:11px;font-weight:800;
+  display:inline;font-family:var(--display);font-size:14px;font-weight:800;
   letter-spacing:.14em;color:var(--c);margin-right:7px;
 }
-.tab .nm{display:inline;font-size:13.5px;font-weight:500;white-space:nowrap}
+.tab .nm{display:inline;font-size:18px;font-weight:500;white-space:nowrap}
 .tab .ln{display:none}
 
 /* ---------- 主區 ---------- */
@@ -103,19 +103,19 @@ main{display:flex;flex-direction:column;min-width:0;overflow:hidden;flex:1;min-h
 
 /* ---------- 策展標籤 ---------- */
 .notes{padding:20px 24px;overflow-y:auto;background:var(--panel)}
-.notes .idx{font-family:var(--display);font-size:12px;font-weight:800;letter-spacing:.26em;color:var(--accent)}
+.notes .idx{font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:.26em;color:var(--accent)}
 .notes h2{font-family:var(--display);font-size:27px;font-weight:800;letter-spacing:-.01em;margin-top:8px;line-height:1.15}
-.notes .zhname{font-family:var(--serif);font-size:15px;color:var(--dim);margin-top:5px;font-style:italic}
-.notes .lede{font-family:var(--serif);font-size:16px;line-height:1.75;color:#c8c5be;margin-top:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.notes .zhname{font-family:var(--serif);font-size:18px;color:var(--dim);margin-top:5px;font-style:italic}
+.notes .lede{font-family:var(--serif);font-size:20px;line-height:1.75;color:#c8c5be;margin-top:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 
 .block{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
-.block .h{font-size:11px;letter-spacing:.24em;color:var(--dimmer);text-transform:uppercase;margin-bottom:8px}
+.block .h{font-size:14px;letter-spacing:.24em;color:var(--dimmer);text-transform:uppercase;margin-bottom:8px}
 .block ul{list-style:none}
 .block li{
-  font-size:14px;line-height:1.7;color:#b3b0a9;padding-left:16px;position:relative;margin-bottom:5px;
+  font-size:20px;line-height:1.7;color:#b3b0a9;padding-left:16px;position:relative;margin-bottom:5px;
 }
 .block li::before{content:"—";position:absolute;left:0;color:var(--accent)}
-.block p{font-family:var(--serif);font-size:14.5px;line-height:1.8;color:#b3b0a9;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.block p{font-family:var(--serif);font-size:20px;line-height:1.8;color:#b3b0a9;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .block li.lesson{color:var(--accent)}
 .gap{color:#c9a0a0}
 .gap b{color:#e08a8a;font-weight:600}
@@ -123,22 +123,8 @@ main{display:flex;flex-direction:column;min-width:0;overflow:hidden;flex:1;min-h
 .metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden}
 .metric{background:#111133;padding:12px 14px}
 .metric .v{font-family:var(--display);font-size:23px;font-weight:800;color:var(--ink);line-height:1}
-.metric .l{font-size:10.5px;letter-spacing:.16em;color:var(--dimmer);text-transform:uppercase;margin-top:5px}
+.metric .l{font-size:14px;letter-spacing:.16em;color:var(--dimmer);text-transform:uppercase;margin-top:5px}
 .metric.accent .v{color:var(--accent)}
-
-/* ---------- 成長曲線 ---------- */
-.growth{
-  border-top:1px solid var(--line);background:var(--bg2);
-  padding:14px 28px 16px;display:flex;align-items:center;gap:26px;flex-shrink:0;
-}
-.growth .cap{font-size:11px;letter-spacing:.24em;color:var(--dimmer);text-transform:uppercase;flex-shrink:0;line-height:1.7}
-.growth .cap b{display:block;color:var(--dim);letter-spacing:.06em;text-transform:none;font-size:11.5px;font-weight:400;margin-top:3px}
-.bars{flex:1;display:flex;gap:10px;align-items:flex-end;height:56px;min-width:0}
-.bar-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0}
-.bar-col .n{font-size:10.5px;color:var(--dim);letter-spacing:.1em;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-col .b{height:0;background:var(--c);border-radius:2px 2px 0 0;transition:height 1.1s cubic-bezier(.2,.9,.3,1);position:relative}
-.bar-col .b::after{content:attr(data-v);position:absolute;top:-13px;left:0;font-size:10.5px;color:var(--c);white-space:nowrap}
-.bar-col .l{font-size:10.5px;color:var(--dimmer);margin-top:5px;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- 響應式 ---------- */
 @media(max-width:1180px){
@@ -151,7 +137,6 @@ main{display:flex;flex-direction:column;min-width:0;overflow:hidden;flex:1;min-h
   .masthead{padding:14px 18px 10px}
   .masthead h1{font-size:22px}
   .notes{padding:20px 18px}
-  .growth{display:none}
 }
 </style>
 </head>
@@ -192,11 +177,6 @@ main{display:flex;flex-direction:column;min-width:0;overflow:hidden;flex:1;min-h
       </div>
       <aside class="notes" id="notes"></aside>
     </div>
-
-    <div class="growth">
-      <div class="cap"><span data-i18n="growthCap">規模</span><b id="growthSub">各版本資料夾規模 · 含素材</b></div>
-      <div class="bars" id="bars"></div>
-    </div>
   </main>
 </div>
 
@@ -210,13 +190,13 @@ main{display:flex;flex-direction:column;min-width:0;overflow:hidden;flex:1;min-h
 const STAGES = [
   {
     id:'s1', num:'01', color:'var(--s1)',
-    en:{ name:'Core Loop', zh:'核心玩法', head:'A game is a loop, not a pile of features.',
+    en:{ name:'Core Loop', zh:'核心玩法', head:'The core loop: action → feedback → challenge → repeat.',
       lede:'Three shapes, one rule, thirty seconds. Not one word on screen.',
       added:['A blue dot that follows your cursor','Three red dots that spawn at the edges and chase in straight lines','Collision detection and a 30-second countdown bar','A full-screen red flash when you get caught'],
       why:'Prove the loop is alive before any art, audio or story.',
       lesson:'One takeaway: how to stay alive. What the red dots mean is never revealed — on purpose.',
       absent:'Every word, image, sound, story, score and explanation is removed.' },
-    zh:{ name:'核心玩法', zh:'Core Loop', head:'一個遊戲是一個迴圈，不是一堆功能。',
+    zh:{ name:'核心玩法', zh:'Core Loop', head:'核心迴圈：行動 → 回饋 → 挑戰 → 重複',
       lede:'三個形狀、一條規則、三十秒 —— 畫面上連一個字都沒有。',
       added:['藍色圓點跟隨游標移動','三顆紅點從邊界生成，沿直線追擊','碰撞判定 + 30 秒倒數橫條','被追到時整片泛紅'],
       why:'先證明迴圈是活的，再談美術與劇情。',
@@ -275,7 +255,7 @@ const STAGES = [
 ];
 // ★ 快取版本號：每個前端的 js/css 一改就要同步更新這裡（AGENTS.md 規定）。
 //   版本格式 {YYYYMMDD}{序號}，同日每次改動遞增。
-const BUILD = '20261008a';
+const BUILD = '20261009a';
 const PATH = {
   s1:'stages/01-core-loop/index.html',
   s2:'stages/02-game-feel/index.html',
@@ -359,20 +339,6 @@ function renderNotes(s){
   `;
 }
 
-function renderBars(){
-  const data = STAGES.map(s=>({n:s.num, l:s.lines, c:s.color, lb: lang==='zh-Hant'?'本示範重建':'reconstruction'}));
-  const max = Math.max(...data.map(d=>d.l));
-  $('bars').innerHTML = data.map(d=>`
-    <div class="bar-col" style="--c:${d.c}">
-      <div class="n">${d.l.toLocaleString()}</div>
-      <div class="b" data-h="${(d.l/max*100).toFixed(1)}" data-v="${d.l.toLocaleString()}"></div>
-      <div class="l">${d.n} · ${d.lb}</div>
-    </div>`).join('');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    document.querySelectorAll('.bar-col .b').forEach(b=> b.style.height = b.dataset.h + '%');
-  }));
-}
-
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 /* ---------------- 舞台載入 ---------------- */
@@ -391,7 +357,7 @@ function select(id){
   current = id;
   const s = STAGES.find(x=>x.id===id);
   document.documentElement.style.setProperty('--accent', s.color);
-  renderTabs(); renderNotes(s); renderBars();
+  renderTabs(); renderNotes(s);
   show(PATH[s.id]);
 }
 
@@ -401,11 +367,10 @@ function applyLang(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const k = el.dataset.i18n;
     const m = { brandKicker:['Development Demo','開發演示'],
-      btnFull:['Fullscreen','全螢幕'],
-      growthCap:['Scale','規模'] };
+      btnFull:['Fullscreen','全螢幕']'規模'] };
     if (m[k]) el.textContent = lang === 'zh-Hant' ? m[k][1] : m[k][0];
   });
-  $('growthSub').textContent = lang==='zh-Hant' ? '各版本資料夾規模 · 含素材' : 'Project size per version · assets included';
+  
   select(current);
 }
 

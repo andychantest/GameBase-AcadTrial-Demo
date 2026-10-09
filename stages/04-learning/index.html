@@ -8,7 +8,7 @@
        so that presenting the demo does not pollute the real
        Learning Analytics data. The gtag() calls in game.js are
        wrapped in try/catch, so gameplay is unaffected. -->
-  <link rel="stylesheet" href="style.css?v=20260930b">
+  <link rel="stylesheet" href="style.css?v=20261009a">
   <style>
     /* Cutscene screen */
     #screen-cutscene {
@@ -24,7 +24,7 @@
     #mute-btn {
       position: absolute; bottom: 10px; right: 14px; z-index: 60;
       background: rgba(10,10,30,0.7); border: 1px solid #334;
-      color: #aaa; font-size: calc(13px * var(--ui-scale)); font-family: monospace;
+      color: #aaa; font-size: calc(20px * var(--ui-scale)); font-family: monospace;
       padding: 5px 12px; border-radius: 4px; cursor: pointer;
     }
     #mute-btn:hover { background: rgba(30,30,60,0.9); color: #fff; }
@@ -49,7 +49,7 @@
   <!-- CUTSCENE -->
   <div id="screen-cutscene" class="screen" onclick="Game.advanceCutscene()" style="z-index:50;">
     <!-- Canvas draws the cutscene image -->
-    <div id="cutscene-instruction" style="position:absolute;bottom:24px;width:100%;text-align:center;color:rgba(255,255,255,0.5);font:13px monospace;pointer-events:none;">
+    <div id="cutscene-instruction" style="position:absolute;bottom:24px;width:100%;text-align:center;color:rgba(255,255,255,0.5);font: 20px monospace;pointer-events:none;">
       Click or tap to continue →
     </div>
   </div>
@@ -67,16 +67,16 @@
       </div>
       <div style="margin: 20px 0; max-width: 320px; margin-left: auto; margin-right: auto;">
         <div style="margin-bottom: 14px;">
-          <label style="display: block; color: #aaa; font-size: calc(11px * var(--ui-scale)); margin-bottom: 6px;">Name</label>
-          <input type="text" id="login-name" value="Demo Student" placeholder="Enter your name" autocomplete="off" style="width: 100%; padding: 10px 12px; border: 1px solid #334; border-radius: 6px; background: #0a0a1a; color: #fff; font-size: calc(14px * var(--ui-scale)); box-sizing: border-box;">
+          <label style="display: block; color: #aaa; font-size: calc(20px * var(--ui-scale)); margin-bottom: 6px;">Name</label>
+          <input type="text" id="login-name" value="Demo Student" placeholder="Enter your name" autocomplete="off" style="width: 100%; padding: 10px 12px; border: 1px solid #334; border-radius: 6px; background: #0a0a1a; color: #fff; font-size: calc(20px * var(--ui-scale)); box-sizing: border-box;">
         </div>
         <div style="margin-bottom: 20px;">
-          <label style="display: block; color: #aaa; font-size: calc(11px * var(--ui-scale)); margin-bottom: 6px;">Email</label>
-          <input type="email" id="login-email" value="demo@student.university.edu" placeholder="Enter your university email" style="width: 100%; padding: 10px 12px; border: 1px solid #334; border-radius: 6px; background: #0a0a1a; color: #fff; font-size: calc(14px * var(--ui-scale)); box-sizing: border-box;">
+          <label style="display: block; color: #aaa; font-size: calc(20px * var(--ui-scale)); margin-bottom: 6px;">Email</label>
+          <input type="email" id="login-email" value="demo@student.university.edu" placeholder="Enter your university email" style="width: 100%; padding: 10px 12px; border: 1px solid #334; border-radius: 6px; background: #0a0a1a; color: #fff; font-size: calc(20px * var(--ui-scale)); box-sizing: border-box;">
         </div>
         <button class="btn btn-green" onclick="Game.submitLogin()" style="width: 100%;">CONTINUE →</button>
         <!-- Demo Game 副本專用：V21 原本是空白登入欄，這裡預填示範值方便直接進入教學流程 -->
-        <p style="margin: 12px 0 0; color: #6a7a8a; font-size: calc(10px * var(--ui-scale)); text-align: center; line-height: 1.6;">
+        <p style="margin: 12px 0 0; color: #6a7a8a; font-size: calc(20px * var(--ui-scale)); text-align: center; line-height: 1.6;">
           Demo Game copy: fields are pre-filled so you can enter directly.<br>Edit or clear them if you prefer &mdash; the real login is unchanged.
         </p>
       </div>
@@ -98,11 +98,11 @@
       </div>
       <button class="btn btn-green" onclick="Game.showRoleSelect()">START GAME</button>
       <br><br>
-      <button class="btn btn-outline" style="font-size:calc(12px * var(--ui-scale));padding:7px 18px;"
+      <button class="btn btn-outline" style="font-size:calc(20px * var(--ui-scale));padding:7px 18px;"
         onclick="document.getElementById('cfg-info').style.display=document.getElementById('cfg-info').style.display==='block'?'none':'block'">
         About Config &amp; Assets
       </button>
-      <div id="cfg-info" style="display:none;margin-top:14px;text-align:left;background:#0a0a1a;border:1px solid #334;border-radius:6px;padding:14px;font-size:calc(12px * var(--ui-scale));color:#888;line-height:1.9;">
+      <div id="cfg-info" style="display:none;margin-top:14px;text-align:left;background:#0a0a1a;border:1px solid #334;border-radius:6px;padding:14px;font-size:calc(20px * var(--ui-scale));color:#888;line-height:1.9;">
         <strong style="color:#f5c842;">Customise this game:</strong><br>
         • Edit <code style="color:#22c55e;">config.js</code> to change game settings<br>
         • Add images to <code style="color:#22c55e;">images/</code> subfolders to add art<br>
@@ -179,7 +179,7 @@
       </div>
       <button class="btn btn-green" onclick="Game.startGame()">BEGIN ADVENTURE →</button>
       <br><br>
-      <button class="btn btn-outline" style="font-size:calc(12px * var(--ui-scale));padding:7px 18px;" onclick="UI.showScreen('title')">← Back</button>
+      <button class="btn btn-outline" style="font-size:calc(20px * var(--ui-scale));padding:7px 18px;" onclick="UI.showScreen('title')">← Back</button>
     </div>
   </div>
 
@@ -275,13 +275,13 @@
 
 </div>
 
-<script src="config.js?v=20260930b"></script>
-<script src="config-parser.js?v=20260930b"></script>
-<script src="asset-loader.js?v=20260930b"></script>
-<script src="game.js?v=20260930b"></script>
+<script src="config.js?v=20261009a"></script>
+<script src="config-parser.js?v=20261009a"></script>
+<script src="asset-loader.js?v=20261009a"></script>
+<script src="game.js?v=20261009a"></script>
 <script>
   // 與根切換器 BUILD 同步：asset-loader 以這個值當圖片快取版本參數。
-  window.APP_BUILD = '20260930b';
+  window.APP_BUILD = '20261009a';
   const DEMO_SKIP = location.search.includes('skip=1') || (() => { try { return localStorage.getItem('academic_demo_skip') === '1'; } catch (e) { return false; } })();
   const debugSkipBtn = document.getElementById('btn-debug-skip');
   const demoSkipBtn = document.getElementById('btn-demo-skip');

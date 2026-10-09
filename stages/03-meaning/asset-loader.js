@@ -5,6 +5,8 @@
 // 「缺圖不應該讓遊戲壞掉」。
 // 每個邏輯名稱對應一個「候選檔名清單」，依序嘗試，
 // 全部失敗就回傳 null，遊戲改用程式畫的幾何圖形。
+//
+// 優化：並行載入不同 key（提升載入速度），候選檔名仍依序嘗試。
 
 const AssetLoader = {
   _img: {},
@@ -55,17 +57,20 @@ const AssetLoader = {
     });
   },
 
+  // 載入單個 key（依序嘗試候選檔名）
+  async _loadKey(key) {
+    const folder = this.folders[key]
+      || (key.startsWith('bg') ? 'backgrounds' : key.startsWith('cut') ? 'cutscenes' : 'enemies');
+    for (const name of this.candidates[key]) {
+      const im = await this._load(`images/${folder}/${name}.png`);
+      if (im) { this._img[key] = im; return; }
+    }
+  },
+
   async loadAll() {
     const keys = Object.keys(this.candidates);
-    // 逐個 key 依序嘗試候選檔名，命中就停 —— 避免產生大量 404
-    for (const key of keys) {
-      const folder = this.folders[key]
-        || (key.startsWith('bg') ? 'backgrounds' : key.startsWith('cut') ? 'cutscenes' : 'enemies');
-      for (const name of this.candidates[key]) {
-        const im = await this._load(`images/${folder}/${name}.png`);
-        if (im) { this._img[key] = im; break; }
-      }
-    }
+    // 並行載入所有 key（大幅提升速度），候選檔名內部仍依序嘗試
+    await Promise.all(keys.map(k => this._loadKey(k)));
     const missing = keys.filter(k => !this._img[k]);
     console.log(`[Assets] 載入 ${Object.keys(this._img).length}/${keys.length} 張` +
       (missing.length ? `；缺少（已改用幾何圖形）: ${missing.join(', ')}` : ''));

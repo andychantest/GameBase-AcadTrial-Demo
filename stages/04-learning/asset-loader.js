@@ -9,7 +9,7 @@ const AssetLoader = {
   _audio: {},      // cache: filename → HTMLAudioElement | null
   _loadingQueue: [], // Queue for managing concurrent loads
   _activeLoads: 0,
-  _maxConcurrent: 3, // Increased for faster loading
+  _maxConcurrent: 6, // Increased for faster loading (was 3)
 
   // Clear cache for fresh reload
   clearCache() {
@@ -39,7 +39,7 @@ const AssetLoader = {
         .catch(() => item.resolve(null))
         .finally(() => {
           this._activeLoads--;
-          setTimeout(() => this._processQueue(), 20);
+          this._processQueue(); // removed 20ms delay
         });
     }
   },
@@ -97,8 +97,6 @@ const AssetLoader = {
     for (const p of paths) {
       const img = await this.loadImage(p);
       results.push(img);
-      // Minimal delay between loads
-      await new Promise(r => setTimeout(r, 30));
     }
     return results;
   },
@@ -343,20 +341,19 @@ const AssetLoader = {
     console.log('[AssetLoader] Enemy paths:', enemyPaths);
 
     const groups = [
-      ['Loading backgrounds', bgPaths, 40],
-      ['Loading player animations', playerPaths, 30],
-      ['Loading collectibles', collectiblePaths, 20],
-      ['Loading enemies', enemyPaths, 20],
+      ['Loading backgrounds', bgPaths],
+      ['Loading player animations', playerPaths],
+      ['Loading collectibles', collectiblePaths],
+      ['Loading enemies', enemyPaths],
     ];
 
     let done = 0;
     const total = bgPaths.length + playerPaths.length + collectiblePaths.length + enemyPaths.length;
-    for (const [phrase, paths, delay] of groups) {
+    for (const [phrase, paths] of groups) {
       for (let i = 0; i < paths.length; i++) {
         await this.loadImage(paths[i], 2);
         done++;
         if (onProgress) onProgress(phrase, done, total);
-        await new Promise(r => setTimeout(r, delay));
       }
     }
 
@@ -381,7 +378,6 @@ const AssetLoader = {
     console.log('[AssetLoader] Loading cutscenes in background...');
     for (let i = 0; i < cutscenePaths.length; i++) {
       await this.loadImage(cutscenePaths[i], 2);
-      await new Promise(r => setTimeout(r, 50));
     }
     const cutsceneCount = cutscenePaths.filter(p => this.isReady(p)).length;
     console.log(`[AssetLoader] Cutscenes: ${cutsceneCount}/${cutscenePaths.length} (background load complete)`);
