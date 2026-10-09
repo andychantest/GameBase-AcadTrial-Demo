@@ -47,8 +47,8 @@
 </head>
 <body>
 <canvas id="c"></canvas>
-<button id="btn-skip" style="position:absolute;top:8px;right:8px;z-index:10;display:none;padding:8px 16px;font-size:20px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⏭</button>
-<button id="btn-restart" style="position:absolute;top:8px;right:52px;z-index:10;display:none;padding:8px 16px;font-size:20px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⟳</button>
+<button id="btn-skip" style="position:absolute;top:8px;right:8px;z-index:10;display:none;padding:8px 16px;font-size:15px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⏭</button>
+<button id="btn-restart" style="position:absolute;top:8px;right:52px;z-index:10;display:none;padding:8px 16px;font-size:15px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:4px;cursor:pointer;opacity:0.7;">⟳</button>
 <script>
 'use strict';
 
@@ -318,7 +318,7 @@ function draw() {
   ctx.globalAlpha = 1;
 
 // 飄字（傷害 / 分數）
-   ctx.textAlign = 'center'; ctx.font = 'bold 16px ui-monospace, monospace';
+   ctx.textAlign = 'center'; ctx.font = 'bold 15px ui-monospace, monospace';
   for (const f of floats) {
     ctx.globalAlpha = Math.max(0, f.life);
     ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
@@ -350,12 +350,12 @@ function drawHud() {
 
   // ★ 這裡刻意不寫 INTEGRITY。Stage 2 還不能洩漏領域詞彙 ——
   //   「誠信」是 Stage 3 才該給的概念，這一階段只有一條會歸零的條。
-ctx.font = '16px ui-monospace, monospace'; ctx.textAlign = 'left';
+ctx.font = '15px ui-monospace, monospace'; ctx.textAlign = 'left';
    ctx.fillStyle = '#64748b';
    ctx.fillText('LIFE', bx, by - 14);
    ctx.fillText('SCORE', bx + 250, by - 14);
    ctx.fillText('TIME', bx + 340, by - 14);
-   ctx.font = 'bold 16px ui-monospace, monospace';
+   ctx.font = 'bold 15px ui-monospace, monospace';
   ctx.fillStyle = col;  ctx.fillText(Math.round(integrity), bx + 250, by + 8);
   ctx.fillStyle = '#e2e8f0'; ctx.fillText(score, bx + 320, by + 8);
   ctx.fillStyle = elapsed > DURATION - 5 ? '#ef4444' : '#e2e8f0';
@@ -367,7 +367,7 @@ function drawThreatLegend() {
   const bx = W - 132, by = H - 58;
   ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(bx - 10, by - 14, 122, 50);
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.font = '16px ui-monospace, monospace'; ctx.fillStyle = '#64748b';
+  ctx.font = '15px ui-monospace, monospace'; ctx.fillStyle = '#64748b';
   ctx.fillText('THREAT', bx, by - 5);
   const names = ['LOW', 'MED', 'HIGH'];
   for (let i = 0; i < 3; i++) {
@@ -386,7 +386,7 @@ function drawMuteBtn() {
   ctx.strokeStyle = '#334'; ctx.strokeRect(12.5, 12.5, 33, 21);
   ctx.fillStyle = muted ? '#ef4444' : '#22c55e';
   ctx.beginPath(); ctx.arc(23, 23, 4, 0, 6.283); ctx.fill();
-  ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 16px ui-monospace, monospace'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 15px ui-monospace, monospace'; ctx.textAlign = 'left';
   ctx.fillText('M', 32, 26);
   ctx.globalAlpha = 1;
 }
@@ -411,14 +411,14 @@ function drawResultPanel() {
   ctx.fillText(win ? 'STAGE CLEARED' : 'GAME OVER', cx, cy - bh * 0.32);
 
 ctx.fillStyle = '#e2e8f0';
-   ctx.font = `${Math.max(16, Math.round(Math.min(W, H) * 0.02))}px ui-monospace, monospace`;
+   ctx.font = `${Math.max(15, Math.round(Math.min(W, H) * 0.02))}px ui-monospace, monospace`;
   const sub = win
     ? 'YOU SURVIVED THE SPACE — BUT WHAT WILL YOU DO WITH IT?'
     : 'YOUR ACADEMIC STANDING HAS COLLAPSED';
   wrapCenter(sub, cx, cy - bh * 0.10, Math.min(W * 0.62, 420), 20);
 
 ctx.fillStyle = '#94a3b8';
-   ctx.font = `${Math.max(16, Math.round(Math.min(W, H) * 0.018))}px ui-monospace, monospace`;
+   ctx.font = `${Math.max(15, Math.round(Math.min(W, H) * 0.018))}px ui-monospace, monospace`;
   if (win) {
     ctx.fillText('SCORE ' + Math.round(score), cx, cy + bh * 0.10);
   } else {
@@ -426,7 +426,7 @@ ctx.fillStyle = '#94a3b8';
   }
 
 ctx.fillStyle = '#64748b';
-   ctx.font = `${Math.max(16, Math.round(Math.min(W, H) * 0.016))}px ui-monospace, monospace`;
+   ctx.font = `${Math.max(15, Math.round(Math.min(W, H) * 0.016))}px ui-monospace, monospace`;
    ctx.fillText('— Click to retry —', cx, cy + bh * 0.28);
 }
 
