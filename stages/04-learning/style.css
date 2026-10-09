@@ -131,7 +131,7 @@ html, body {
 }
 
 .role-select-title {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(18px * var(--ui-scale));
   font-weight: bold;
   color: var(--amber);
   margin-bottom: 6px;
@@ -139,7 +139,7 @@ html, body {
 
 .role-select-sub {
   color: var(--text-muted);
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(14px * var(--ui-scale));
   margin-bottom: 24px;
 }
 
@@ -154,9 +154,9 @@ html, body {
 .role-card {
   background: var(--dark2);
   border: 2px solid var(--border);
-  border-radius: calc(20px * var(--ui-scale));
-  padding: calc(20px * var(--ui-scale)) calc(20px * var(--ui-scale));
-  width: calc(190px * var(--ui-scale));
+  border-radius: calc(16px * var(--ui-scale));
+  padding: calc(16px * var(--ui-scale)) calc(16px * var(--ui-scale));
+  width: calc(170px * var(--ui-scale));
   cursor: pointer;
   transition: border-color 0.2s, transform 0.15s;
   text-align: center;
@@ -164,14 +164,14 @@ html, body {
 .role-card:hover { border-color: #4a6fa5; transform: translateY(-2px); }
 .role-card.selected { border-color: var(--amber); }
 
-.role-icon { font-size: calc(40px * var(--ui-scale)); display: none; }
-.role-img-wrap { width: 90px; height: 90px; margin: 0 auto 10px; border-radius: 50%; overflow: hidden; background: #1a1a2e; display: flex; align-items: center; justify-content: center; }
-.role-student-img { width: 90px; height: 90px; object-fit: cover; object-position: center 35%; display: none; }
-.role-name { color: var(--amber); font-size: calc(20px * var(--ui-scale)); font-weight: bold; margin-bottom: 6px; }
-.role-desc { color: var(--text-muted); font-size: calc(20px * var(--ui-scale)); line-height: 1.6; margin-bottom: 12px; }
+.role-icon { font-size: calc(36px * var(--ui-scale)); display: none; }
+.role-img-wrap { width: 80px; height: 80px; margin: 0 auto 10px; border-radius: 50%; overflow: hidden; background: #1a1a2e; display: flex; align-items: center; justify-content: center; }
+.role-student-img { width: 80px; height: 80px; object-fit: cover; object-position: center 35%; display: none; }
+.role-name { color: var(--amber); font-size: calc(16px * var(--ui-scale)); font-weight: bold; margin-bottom: 6px; }
+.role-desc { color: var(--text-muted); font-size: calc(14px * var(--ui-scale)); line-height: 1.6; margin-bottom: 12px; }
 
 .stat-bar-wrap { text-align: left; margin-bottom: 12px; }
-.stat-label { color: #555; font-size: calc(20px * var(--ui-scale)); margin-bottom: 3px; }
+.stat-label { color: #555; font-size: calc(13px * var(--ui-scale)); margin-bottom: 3px; }
 .stat-pips { display: flex; gap: 3px; }
 .stat-pip { width: 12px; height: 8px; border-radius: 2px; }
 .stat-pip.on { background: var(--amber); }
@@ -184,7 +184,7 @@ html, body {
   text-align: left;
 }
 .role-conditions-title {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   font-weight: bold;
   color: var(--amber);
   letter-spacing: 0.08em;
@@ -192,7 +192,7 @@ html, body {
   margin-bottom: 4px;
 }
 .role-conditions-text {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   color: #8898aa;
   line-height: 1.6;
 }
@@ -219,22 +219,22 @@ html, body {
 #hud-top {
   display: flex;
   align-items: center;
-  gap: calc(20px * var(--ui-scale));
-  padding: calc(20px * var(--ui-scale)) calc(20px * var(--ui-scale));
+  gap: calc(8px * var(--ui-scale));
+  padding: calc(3px * var(--ui-scale)) calc(10px * var(--ui-scale));
   background: #06060f;
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
   flex-shrink: 0;
 }
 
-.hud-label { color: #555; font-size: calc(20px * var(--ui-scale)); }
-.hud-val { color: #fff; font-size: calc(20px * var(--ui-scale)); font-weight: bold; }
+.hud-label { color: #555; font-size: calc(11px * var(--ui-scale)); }
+.hud-val { color: #fff; font-size: calc(14px * var(--ui-scale)); font-weight: bold; }
 
 #hud-int-wrap { flex: 1; min-width: 50px; }
 #hud-int-bg { background: #1a1a2e; border-radius: 2px; height: 8px; }
 #hud-integrity-bar { height: 8px; border-radius: 2px; background: var(--green); transition: width 0.3s, background 0.3s; }
 
-#hud-grade { font-size: calc(20px * var(--ui-scale)); font-weight: bold; }
+#hud-grade { font-size: calc(14px * var(--ui-scale)); font-weight: bold; }
 
 #hud-skills-wrap {
   display: flex;
@@ -247,13 +247,13 @@ html, body {
   flex-wrap: wrap;
   min-height: 16px;
 }
-.hud-skills-label { color: #444; font-size: calc(20px * var(--ui-scale)); }
-.skill-badge-active { background: #1a1a20; border: 1px solid var(--amber); color: var(--amber); border-radius: 20px; padding: 2px 10px; font-size: calc(20px * var(--ui-scale)); }
-.skill-badge-empty { color: #444; font-size: calc(20px * var(--ui-scale)); font-style: italic; }
+.hud-skills-label { color: #444; font-size: calc(12px * var(--ui-scale)); }
+.skill-badge-active { background: #1a1a20; border: 1px solid var(--amber); color: var(--amber); border-radius: 20px; padding: 2px 10px; font-size: calc(13px * var(--ui-scale)); }
+.skill-badge-empty { color: #444; font-size: calc(13px * var(--ui-scale)); font-style: italic; }
 
 #hud-assignment-label {
   color: #3b82f6;
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   padding: 3px 16px;
   background: #06060f;
   border-bottom: 1px solid var(--border);
@@ -271,8 +271,8 @@ html, body {
   overflow: hidden;
   flex-shrink: 0;
 }
-#essay-label { color: #444; font-size: calc(20px * var(--ui-scale)); margin-bottom: 2px; }
-#essay-display { font-size: calc(20px * var(--ui-scale)); line-height: 1.3; color: #94a3b8; word-break: break-word; }
+#essay-label { color: #444; font-size: calc(11px * var(--ui-scale)); margin-bottom: 2px; }
+#essay-display { font-size: calc(13px * var(--ui-scale)); line-height: 1.3; color: #94a3b8; word-break: break-word; }
 .essay-good { color: var(--green); }
 .essay-bad { color: var(--red); text-decoration: line-through; }
 .essay-corrupt { color: var(--purple); font-style: italic; }
@@ -294,14 +294,14 @@ html, body {
   padding-bottom: calc(24px * var(--ui-scale));
 }
 
-#skill-level-name { color: var(--amber); font-size: calc(20px * var(--ui-scale)); font-weight: bold; margin-bottom: 6px; }
-#skill-level-desc { color: var(--text-muted); font-size: calc(20px * var(--ui-scale)); margin-bottom: 22px; line-height: 1.6; }
+#skill-level-name { color: var(--amber); font-size: calc(18px * var(--ui-scale)); font-weight: bold; margin-bottom: 6px; }
+#skill-level-desc { color: var(--text-muted); font-size: calc(14px * var(--ui-scale)); margin-bottom: 22px; line-height: 1.6; }
 
-.skill-card-badge { background: var(--amber); color: #000; font-size: calc(20px * var(--ui-scale)); font-weight: bold; padding: 3px 10px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+.skill-card-badge { background: var(--amber); color: #000; font-size: calc(11px * var(--ui-scale)); font-weight: bold; padding: 3px 10px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
 
 .skill-card-columns {
   display: flex;
-  gap: calc(20px * var(--ui-scale));
+  gap: calc(16px * var(--ui-scale));
 }
 
 @media (max-width: 768px) {
@@ -320,18 +320,18 @@ html, body {
   margin: 0 auto;
 }
 .no-skill-icon { font-size: calc(36px * var(--ui-scale)); color: var(--red); margin-bottom: 8px; font-weight: bold; }
-.no-skill-title { color: var(--red); font-size: calc(20px * var(--ui-scale)); font-weight: bold; margin-bottom: 8px; }
-.no-skill-desc { color: var(--text-muted); font-size: calc(20px * var(--ui-scale)); line-height: 1.6; }
+.no-skill-title { color: var(--red); font-size: calc(16px * var(--ui-scale)); font-weight: bold; margin-bottom: 8px; }
+.no-skill-desc { color: var(--text-muted); font-size: calc(14px * var(--ui-scale)); line-height: 1.6; }
 
 .skill-summary {
   color: #555;
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   padding-top: 10px;
 }
 
 .skill-selection-header {
   color: var(--amber);
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(16px * var(--ui-scale));
   font-weight: bold;
   margin-bottom: 12px;
   text-align: center;
@@ -410,7 +410,7 @@ html, body {
 
 .expand-text {
   color: var(--amber);
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(12px * var(--ui-scale));
   font-weight: bold;
 }
 
@@ -420,18 +420,18 @@ html, body {
   border-top: 1px solid var(--border);
 }
 
-.active-skill-tag { background: #1a2a1a; border: 1px solid var(--green); color: var(--green); border-radius: 12px; padding: 2px 8px; font-size: calc(20px * var(--ui-scale)); margin-right: 4px; }
+.active-skill-tag { background: #1a2a1a; border: 1px solid var(--green); color: var(--green); border-radius: 12px; padding: 2px 8px; font-size: calc(12px * var(--ui-scale)); margin-right: 4px; }
 
 .skill-card-effect {
   color: var(--text);
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(14px * var(--ui-scale));
   line-height: 1.6;
   margin-bottom: 10px;
 }
 
 .skill-card-learn {
   color: var(--green);
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(14px * var(--ui-scale));
   line-height: 1.65;
 }
 
@@ -452,8 +452,8 @@ html, body {
   text-align: center;
 }
 
-#result-level-num { color: var(--text-muted); font-size: calc(20px * var(--ui-scale)); margin-bottom: 4px; }
-#result-assignment { color: var(--amber); font-size: calc(22px * var(--ui-scale)); font-weight: bold; margin-bottom: 18px; }
+#result-level-num { color: var(--text-muted); font-size: calc(14px * var(--ui-scale)); margin-bottom: 4px; }
+#result-assignment { color: var(--amber); font-size: calc(20px * var(--ui-scale)); font-weight: bold; margin-bottom: 18px; }
 
 .result-grade-block {
   border-radius: 10px;
@@ -461,12 +461,12 @@ html, body {
   margin-bottom: 16px;
   border: 2px solid #334;
 }
-#result-grade-letter { font-size: calc(56px * var(--ui-scale)); font-weight: bold; display: block; line-height: 1; }
-#result-grade-pct { font-size: calc(20px * var(--ui-scale)); color: var(--text-muted); }
+#result-grade-letter { font-size: calc(52px * var(--ui-scale)); font-weight: bold; display: block; line-height: 1; }
+#result-grade-pct { font-size: calc(18px * var(--ui-scale)); color: var(--text-muted); }
 
 #result-message {
   color: var(--text);
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(15px * var(--ui-scale));
   line-height: 1.7;
   margin-bottom: 16px;
   text-align: left;
@@ -475,20 +475,20 @@ html, body {
   padding: 12px 16px;
 }
 
-.result-essay-label { color: #444; font-size: calc(20px * var(--ui-scale)); margin-bottom: 6px; text-align: left; }
+.result-essay-label { color: #444; font-size: calc(12px * var(--ui-scale)); margin-bottom: 6px; text-align: left; }
 #result-essay {
   background: #0a0a1a;
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 10px 14px;
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   line-height: 1.75;
   text-align: left;
   margin-bottom: 16px;
   min-height: 50px;
 }
 
-.grade-history-label { color: #444; font-size: calc(20px * var(--ui-scale)); margin-bottom: 6px; text-align: left; }
+.grade-history-label { color: #444; font-size: calc(12px * var(--ui-scale)); margin-bottom: 6px; text-align: left; }
 #result-history { margin-bottom: 20px; }
 .grade-hist-item {
   display: flex;
@@ -498,11 +498,11 @@ html, body {
   background: var(--dark3);
   border-radius: 6px;
   margin-bottom: 6px;
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(14px * var(--ui-scale));
 }
 .grade-hist-name { color: var(--text-muted); }
-.grade-hist-grade { font-weight: bold; font-size: calc(20px * var(--ui-scale)); }
-.grade-hist-item.large { font-size: calc(20px * var(--ui-scale)); padding: 10px 14px; }
+.grade-hist-grade { font-weight: bold; font-size: calc(16px * var(--ui-scale)); }
+.grade-hist-item.large { font-size: calc(16px * var(--ui-scale)); padding: 10px 14px; }
 
 /* ── COMPLETE SCREEN ───────────────────────────── */
 
@@ -521,9 +521,9 @@ html, body {
   text-align: center;
 }
 
-.complete-title { color: var(--amber); font-size: calc(26px * var(--ui-scale)); font-weight: bold; margin-bottom: 10px; line-height: 1.3; }
-.complete-grad-icon { font-size: calc(52px * var(--ui-scale)); margin-bottom: 16px; }
-#complete-message { color: var(--text); font-size: calc(20px * var(--ui-scale)); line-height: 1.8; margin-bottom: 24px; }
+.complete-title { color: var(--amber); font-size: calc(24px * var(--ui-scale)); font-weight: bold; margin-bottom: 10px; line-height: 1.3; }
+.complete-grad-icon { font-size: calc(48px * var(--ui-scale)); margin-bottom: 16px; }
+#complete-message { color: var(--text); font-size: calc(16px * var(--ui-scale)); line-height: 1.8; margin-bottom: 24px; }
 #complete-history { margin-bottom: 24px; }
 .complete-reflection {
   background: var(--dark3);
@@ -533,17 +533,17 @@ html, body {
   text-align: left;
   margin-bottom: 20px;
 }
-.reflection-title { color: var(--green); font-size: calc(20px * var(--ui-scale)); font-weight: bold; margin-bottom: 8px; }
-.reflection-questions { color: var(--text-muted); font-size: calc(20px * var(--ui-scale)); line-height: 2; list-style: none; }
+.reflection-title { color: var(--green); font-size: calc(14px * var(--ui-scale)); font-weight: bold; margin-bottom: 8px; }
+.reflection-questions { color: var(--text-muted); font-size: calc(14px * var(--ui-scale)); line-height: 2; list-style: none; }
 .reflection-questions li::before { content: '▸ '; color: var(--green); }
 
 /* ── BUTTONS ───────────────────────────────────── */
 
 .btn {
   display: inline-block;
-  padding: calc(20px * var(--ui-scale)) calc(32px * var(--ui-scale));
-  border-radius: calc(20px * var(--ui-scale));
-  font-size: calc(20px * var(--ui-scale));
+  padding: calc(13px * var(--ui-scale)) calc(32px * var(--ui-scale));
+  border-radius: calc(6px * var(--ui-scale));
+  font-size: calc(15px * var(--ui-scale));
   font-weight: bold;
   font-family: 'Courier New', monospace;
   cursor: pointer;
@@ -556,7 +556,7 @@ html, body {
 /* ── LOADING ───────────────────────────────────── */
 .btn-green { background: #15803d; color: #fff; }
 .btn-outline { background: transparent; border: 2px solid var(--text-muted); color: var(--text); }
-.btn-skip { background: #dc2626; color: #fff; padding: 8px 16px; font-size: 20px; position: fixed; top: 10px; right: 10px; z-index: 100; }
+.btn-skip { background: #dc2626; color: #fff; padding: 8px 16px; font-size: 12px; position: fixed; top: 10px; right: 10px; z-index: 100; }
 
 #screen-loading {
   align-items: center;
@@ -564,8 +564,8 @@ html, body {
   background: var(--dark);
   z-index: 50;
 }
-.loading-text { color: var(--amber); font-size: calc(20px * var(--ui-scale)); letter-spacing: 3px; }
-.loading-sub { color: #444; font-size: calc(20px * var(--ui-scale)); margin-top: 8px; }
+.loading-text { color: var(--amber); font-size: calc(18px * var(--ui-scale)); letter-spacing: 3px; }
+.loading-sub { color: #444; font-size: calc(12px * var(--ui-scale)); margin-top: 8px; }
 
 #cutscene-instruction { display: none; }
 
@@ -578,7 +578,7 @@ html, body {
 
 /* Skill card text fixes */
 .effect-label {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   font-weight: bold;
   color: #3b82f6;
   letter-spacing: 1px;
@@ -587,12 +587,12 @@ html, body {
 }
 .skill-card-learn {
   color: #86efac;
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(14px * var(--ui-scale));
   line-height: 1.7;
 }
 .skill-card-name {
   color: var(--amber);
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(16px * var(--ui-scale));
   font-weight: bold;
   margin-bottom: 6px;
   word-wrap: break-word;
@@ -603,14 +603,14 @@ html, body {
   background: var(--dark2);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: calc(20px * var(--ui-scale));
-  margin-bottom: calc(20px * var(--ui-scale));
+  padding: calc(16px * var(--ui-scale));
+  margin-bottom: calc(16px * var(--ui-scale));
   text-align: left;
   word-wrap: break-word;
 }
 
 .learn-label {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   font-weight: bold;
   color: #22c55e;
   letter-spacing: 1px;
@@ -620,7 +620,7 @@ html, body {
 
 .skill-summary-label {
   color: #555;
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   margin-right: 6px;
 }
 
@@ -628,17 +628,17 @@ html, body {
   margin-top: 6px;
   padding-top: 6px;
   border-top: 1px solid var(--border);
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   line-height: 1.4;
 }
 
 .skill-expand-btn .skill-card-effect .effect-label {
   margin-top: 0;
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(11px * var(--ui-scale));
 }
 
 .skill-expand-btn .skill-card-learn {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(13px * var(--ui-scale));
   line-height: 1.4;
 }
 
@@ -658,17 +658,17 @@ html, body {
 
 /* 選擇模式：縮小文字 */
 .skill-selectable .skill-card-name {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(14px * var(--ui-scale));
   margin-bottom: 4px;
 }
 
 .skill-selectable .skill-card-learn {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(12px * var(--ui-scale));
   line-height: 1.4;
 }
 
 .skill-selectable .learn-label {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(11px * var(--ui-scale));
 }
 
 .skill-selectable .skill-expand-btn {
@@ -676,20 +676,50 @@ html, body {
 }
 
 .skill-selectable .expand-text {
-  font-size: calc(20px * var(--ui-scale));
+  font-size: calc(11px * var(--ui-scale));
 }
 
 .skill-selectable.skill-card-item {
-  padding: calc(20px * var(--ui-scale));
+  padding: calc(12px * var(--ui-scale));
   margin-bottom: 0;
 }
 
 .skill-hint {
   color: #ef4444;
-  font-size: calc(20px * var(--ui-scale));
-  margin-top: calc(20px * var(--ui-scale));
+  font-size: calc(14px * var(--ui-scale));
+  margin-top: calc(12px * var(--ui-scale));
   text-align: center;
   font-weight: 500;
+}
+
+.btn-disabled {
+  background: #374151;
+  color: #9ca3af;
+  border: 2px solid #4b5563;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-disabled:hover {
+  background: #374151;
+}
+
+/* Mobile touch improvements */
+@media (pointer: coarse) {
+  /* Larger tap targets on mobile */
+  .btn { padding: 16px 36px; font-size: calc(16px * var(--ui-scale)); }
+  .role-card { padding: 16px 14px; min-height: 140px; }
+  #hud-top { padding: 10px 12px; gap: 10px; }
+  .hud-val { font-size: calc(16px * var(--ui-scale)); }
+  #essay-panel { min-height: 60px; max-height: 90px; }
+
+  /* Disable hover tooltips on touch — they show on tap instead */
+  #screen-arena { touch-action: none; }
+}
+
+/* Prevent text selection during drag */
+#game-canvas { user-select: none; -webkit-user-select: none; cursor: crosshair;}
+#game-wrap { touch-action: none; };
 }
 
 .btn-disabled {
